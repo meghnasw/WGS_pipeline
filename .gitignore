@@ -1,0 +1,12 @@
+# Local cluster runtime artifacts
+env/
+data
+results
+
+# Logs
+*.log
+*.out
+*.err
+
+# OS/editor
+.DS_Store
