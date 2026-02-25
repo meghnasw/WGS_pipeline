@@ -61,10 +61,8 @@ wgs-group-pipeline/
 
   
   examples/
-    
-	samplesheet_example.tsv
-    
-	naming_examples.md
+    samplesheet_example.tsv
+    naming_examples.md
 
 ---
 
