@@ -21,7 +21,7 @@ In R:
     install.packages("tidyverse")
 
 ------------------------------------------------------------
-1) Get the results folder onto your computer
+1) Get the results folder onto your computer (skip to step 2 if done already)
 ------------------------------------------------------------
 
 You need the results folder from the cluster (or a shared storage folder that contains the same structure).
