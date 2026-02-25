@@ -29,7 +29,7 @@ channel_priority: strict
 EOC
 
 echo "[4/8] Creating conda environment at: $ENV_PATH"
-conda create -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc
+conda create -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc busco
 
 echo "[5/8] Making conda activate work in shells"
 conda init bash || true
