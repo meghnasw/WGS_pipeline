@@ -212,3 +212,8 @@ rsync -avz --progress \
 rm -rf /scratch/$USER/wgs_pipeline/data/*
 rm -rf /scratch/$USER/wgs_pipeline/results/*
 ```
+
+------------------------------------------------------------
+9) Visualize on ShinyAPP 
+------------------------------------------------------------
+Follow instructions on the github local folder: local/README
