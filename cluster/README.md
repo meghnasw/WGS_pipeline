@@ -9,8 +9,10 @@ FastQC/MultiQC -> Shovill -> QUAST -> Prokka -> BUSCO (optional)
 ------------------------------------------------------------
 0) One-time: clone the repo (on cluster login node)
 ------------------------------------------------------------
+Connect to the University network direclty via WIFI or via VPN
 
 ```bash
+ssh -l <user> cluster.s3it.uzh.ch
 cd ~
 git clone git@github.com:meghnasw/WGS_pipeline.git wgs_pipeline
 cd wgs_pipeline
