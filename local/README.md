@@ -107,3 +107,22 @@ Notes / common issues
 
 - The script automatically ignores non-sample folders like:
   fastqc_multiqc, assemblies_for_qc, quast_multi, busco_downloads, mlst.*, and slurm logs.
+  
+------------------------------------------------------------
+4) View results in the dashboard (Shiny)
+------------------------------------------------------------
+
+Mac / Linux:
+
+```bash
+    Rscript local/dashboard/run_dashboard.R "/path/to/All_results"
+```
+Windows (PowerShell):
+
+```bash
+    Rscript local\dashboard\run_dashboard.R "C:\path\to\All_results"
+```
+
+The dashboard automatically loads:
+- <results_root>/combined_metrics.csv
+- <results_root>/fastqc_multiqc/multiqc/multiqc_report.html  (if present)
