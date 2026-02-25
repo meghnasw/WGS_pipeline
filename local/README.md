@@ -33,7 +33,7 @@ Run this on your laptop/desktop (NOT on the cluster):
     rsync -avz --progress \
       <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/results/ \
       /path/to/local/results/
-```bash
+```
 
 Example destination on Mac:
 - /Volumes/.../MyProject/results/
@@ -62,11 +62,11 @@ Mac / Linux:
 ```
 Example:
 
-    Rscript local/metrics/summarize_metrics.R "/Volumes/.../All_results"
+Rscript local/metrics/summarize_metrics.R "/Volumes/.../All_results"
 
 Windows (PowerShell):
 
-    Rscript local\metrics\summarize_metrics.R "C:\Users\<you>\Documents\All_results"
+Rscript local\metrics\summarize_metrics.R "C:\Users\<you>\Documents\All_results"
 
 ------------------------------------------------------------
 3) Output
