@@ -69,22 +69,22 @@ cd WGS_pipeline
 ```
 
 Script location in this repo:
-- local/metrics/summarize_metrics.R
+- local/wgs/metrics/summarize_metrics.R
 
 Mac / Linux:
 ```bash
-    Rscript local/metrics/summarize_metrics.R "/path/to/results"
+    Rscript local/wgs/metrics/summarize_metrics.R "/path/to/results"
 ```
 Example:
 
-Rscript local/metrics/summarize_metrics.R "/Volumes/.../All_results"
+Rscript local/wgs/metrics/summarize_metrics.R "/Volumes/.../All_results"
 
 Windows (PowerShell):
 
-Rscript local\metrics\summarize_metrics.R "C:\Users\<you>\Documents\All_results"
+Rscript local\wgs\metrics\summarize_metrics.R "C:\Users\<you>\Documents\All_results"
 
 ------------------------------------------------------------
-3) Output
+2) OPTIONAL: change the output path
 ------------------------------------------------------------
 
 By default the script writes:
@@ -99,13 +99,13 @@ If you want to choose a custom output location:
 Mac / Linux:
 
 ```bash
-    Rscript local/metrics/summarize_metrics.R "/path/to/results" "/path/to/output/combined_metrics.csv"
+    Rscript local/wgs/metrics/summarize_metrics.R "/path/to/results" "/path/to/output/combined_metrics.csv"
 ```
 
 Windows:
 
 ```bash
-    Rscript local\metrics\summarize_metrics.R "C:\path\to\results" "C:\path\to\combined_metrics.csv"
+    Rscript local\wgs\metrics\summarize_metrics.R "C:\path\to\results" "C:\path\to\combined_metrics.csv"
 ```
 
 ------------------------------------------------------------
@@ -124,18 +124,18 @@ Notes / common issues
   fastqc_multiqc, assemblies_for_qc, quast_multi, busco_downloads, mlst.*, and slurm logs.
   
 ------------------------------------------------------------
-4) View results in the dashboard (Shiny)
+3) View results in the dashboard (Shiny)
 ------------------------------------------------------------
 
 Mac / Linux:
 
 ```bash
-    Rscript local/dashboard/run_dashboard.R "/path/to/All_results"
+    Rscript local/wgs/dashboard/run_dashboard.R "/path/to/All_results"
 ```
 Windows (PowerShell):
 
 ```bash
-    Rscript local\dashboard\run_dashboard.R "C:\path\to\All_results"
+    Rscript local\wga\dashboard\run_dashboard.R "C:\path\to\All_results"
 ```
 
 The dashboard automatically loads:
