@@ -52,6 +52,21 @@ If you have WinSCP, you can also download via GUI:
 ------------------------------------------------------------
 2) Run the summary script
 ------------------------------------------------------------
+Clone the repo locally
+
+Mac Users
+
+```bash 
+git clone https://github.com/meghnasw/WGS_pipeline.git
+cd WGS_pipeline
+```
+
+Windows Users
+
+```bash
+git clone https://github.com/meghnasw/WGS_pipeline.git
+cd WGS_pipeline
+```
 
 Script location in this repo:
 - local/metrics/summarize_metrics.R
