@@ -10,6 +10,7 @@ FastQC/MultiQC -> Shovill -> QUAST -> Prokka -> BUSCO (optional)
 0) One-time: clone the repo (on cluster login node)
 ------------------------------------------------------------
 
+```bash
 cd ~
 git clone git@github.com:meghnasw/WGS_pipeline.git wgs_pipeline
 cd wgs_pipeline
