@@ -64,6 +64,9 @@ EXCLUDED (never processed):
 Your lab’s sequencing data location usually appears as: /Volumes/
 
 rsync only paired reads to scratch
+
+RUN FROM A SECOND TERMINAL WINDOW
+
 Example (copy only trimmed reads; adjust path as needed):
 
 ```bash
