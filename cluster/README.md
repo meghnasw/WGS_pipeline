@@ -64,7 +64,8 @@ Please note:
 
 ```text
 - Your lab’s sequencing data location usually appears as: /Volumes/
-- rsync only paired reads to scratch and run the rsync command from a second terminal or powershell window.
+- rsync only paired reads to scratch
+- run the rsync command from a second terminal or powershell window.
 
 Example (copy only trimmed reads; adjust path as needed):
 ```
@@ -172,6 +173,10 @@ Key outputs:
 7) Copy results back to your local/server storage
 ------------------------------------------------------------
 
+Run the all the following commands from the second terminal or powershell window.
+
+Example (copy only trimmed reads; adjust path as needed):
+```
 Option A: copy entire results folder back to your local machine:
 (run from your laptop)
 ```bash
