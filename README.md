@@ -5,7 +5,7 @@ This repository is designed for beginners:
 2) Copy results back and summarize/visualize locally in R
 
 Start here:
-- Cluster setup + run instructions: cluster/README.md
+- Go to cluster folder and start with Cluster setup + run instructions: cluster/README.md
 - Local metrics (R): local/README.md
 
 ---
