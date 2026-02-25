@@ -32,6 +32,7 @@ Run:
 ```bash
 PIPELINE_ROOT="$HOME/wgs_pipeline" SCRATCH_ROOT="/scratch/$USER/wgs_pipeline" bash cluster/bin/setup_cluster.sh
 ```
+This step is time-consuming (~30mins)
 
 If setup worked, you should see:
 
