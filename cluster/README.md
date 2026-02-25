@@ -21,18 +21,17 @@ cd wgs_pipeline
 ------------------------------------------------------------
 1) One-time: cluster setup (env + scratch folders + symlinks)
 ------------------------------------------------------------
-
-This creates:
-- env:     ~/wgs_pipeline/env/wgs
-- data:    ~/wgs_pipeline/data    -> /scratch/$USER/wgs_pipeline/data
-- results: ~/wgs_pipeline/results -> /scratch/$USER/wgs_pipeline/results
-
 Run:
 
 ```bash
 PIPELINE_ROOT="$HOME/wgs_pipeline" SCRATCH_ROOT="/scratch/$USER/wgs_pipeline" bash cluster/bin/setup_cluster.sh
 ```
 This step is time-consuming (~30mins)
+
+This creates:
+- env:     ~/wgs_pipeline/env/wgs
+- data:    ~/wgs_pipeline/data    -> /scratch/$USER/wgs_pipeline/data
+- results: ~/wgs_pipeline/results -> /scratch/$USER/wgs_pipeline/results
 
 If setup worked, you should see:
 
@@ -61,13 +60,14 @@ EXCLUDED (never processed):
 - anything with _U1 or _U2
 - anything containing "untrimmed"
 
-Your lab’s sequencing data location usually appears as: /Volumes/
+Please note: 
 
-rsync only paired reads to scratch
-
-RUN FROM A SECOND TERMINAL WINDOW
+```text
+- Your lab’s sequencing data location usually appears as: /Volumes/
+- rsync only paired reads to scratch and run the rsync command from a second terminal or powershell window.
 
 Example (copy only trimmed reads; adjust path as needed):
+```
 
 ```bash
 rsync -avP \
@@ -110,6 +110,7 @@ wc -l samples.tsv
 ------------------------------------------------------------
 
 IMPORTANT:
+- Estimated time per sample:  maximum 5 minutes.
 - You do not edit the slurm script.
 - You set resources in the submit command.
 - BUSCO is enabled by providing --busco-lineage.
