@@ -110,7 +110,7 @@ wc -l samples.tsv
 ------------------------------------------------------------
 
 IMPORTANT:
-- Estimated time per sample:  maximum 5 minutes.
+- Estimated time per sample: 5-10 minutes.
 - You do not edit the slurm script.
 - You set resources in the submit command.
 - BUSCO is enabled by providing --busco-lineage.
