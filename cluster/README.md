@@ -35,8 +35,9 @@ PIPELINE_ROOT="$HOME/wgs_pipeline" SCRATCH_ROOT="/scratch/$USER/wgs_pipeline" ba
 
 If setup worked, you should see:
 
+```bash
 ls -lah data results
-
+```
 
 ------------------------------------------------------------
 2) Upload data to the cluster (recommended: rsync)
