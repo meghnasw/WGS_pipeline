@@ -1,38 +1,38 @@
-# Cluster setup + run (Slurm)
+# Cluster setup + run (beginner)
 
 ## 1) One-time setup (login node)
-From the repo root on the cluster:
 
-    bash cluster/bin/setup_cluster.sh
+Clone the repo:
+    cd ~
+    git clone git@github.com:meghnasw/WGS_pipeline.git wgs_pipeline
+    cd wgs_pipeline
 
-This will:
-- create `~/wgs_pipeline/{scripts,env}`
-- create `/scratch/$USER/wgs_pipeline/{data,results}`
-- create conda env at `~/wgs_pipeline/env/wgs`
-- symlink:
-  - `~/wgs_pipeline/data -> /scratch/$USER/wgs_pipeline/data`
-  - `~/wgs_pipeline/results -> /scratch/$USER/wgs_pipeline/results`
+Run setup (creates conda env + scratch dirs + symlinks):
+    PIPELINE_ROOT="$HOME/wgs_pipeline" SCRATCH_ROOT="/scratch/$USER/wgs_pipeline" bash cluster/bin/setup_cluster.sh
 
-## 2) Add the pipeline script
-Copy `WGS_pipelinev2.sh` into:
+After setup:
+- env:    ~/wgs_pipeline/env/wgs
+- data:   ~/wgs_pipeline/data    -> /scratch/$USER/wgs_pipeline/data
+- results:~/wgs_pipeline/results -> /scratch/$USER/wgs_pipeline/results
 
-    ~/wgs_pipeline/scripts/WGS_pipelinev2.sh
-
-Make executable:
-
-    chmod +x ~/wgs_pipeline/scripts/WGS_pipelinev2.sh
-
-## 3) Upload FASTQs to scratch
+## 2) Upload reads
 Put paired trimmed reads into:
-
     /scratch/$USER/wgs_pipeline/data/
 
-## 4) Submit job
+Required naming:
+- *_1_trimmed.fastq.gz
+- *_2_trimmed.fastq.gz
 
+## 3) Submit WGS pipeline (choose resources in the command)
+
+From repo root:
     cd ~/wgs_pipeline
-    sbatch cluster/slurm/run_wgs.slurm
+    bash cluster/bin/submit_wgs.sh --partition standard --time 10:00:00 --cpus 8 --mem 24G
 
-## 5) Monitor + logs
-
+## 4) Monitor + logs
     squeue -u $USER
     ls -lah ~/wgs_pipeline/results
+
+Slurm logs:
+- results/slurm-<jobid>.out
+- results/slurm-<jobid>.err
