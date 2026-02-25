@@ -28,8 +28,14 @@ channels:
 channel_priority: strict
 EOC
 
-echo "[4/8] Creating conda environment at: $ENV_PATH"
-conda create -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc busco
+echo "[4/8] Creating/updating conda environment at: $ENV_PATH"
+if [ -d "$ENV_PATH" ]; then
+  echo "Env already exists: $ENV_PATH"
+  echo "Installing/ensuring required packages..."
+  conda install -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc busco
+else
+  conda create -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc busco
+fi
 
 echo "[5/8] Making conda activate work in shells"
 conda init bash || true
@@ -43,7 +49,7 @@ echo "[7/8] Verifying tools..."
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "$ENV_PATH"
 
-for tool in shovill quast prokka fastqc multiqc pigz; do
+for tool in shovill quast prokka fastqc multiqc pigz busco; do
   echo -n " - $tool: "
   command -v "$tool" >/dev/null && echo "OK" || (echo "MISSING" && exit 1)
 done
