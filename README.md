@@ -1,70 +1,21 @@
 # WGS Pipeline (cluster run + local R metrics)
 
-This repository is designed for beginners:
-1) Run the WGS pipeline on the cluster (Slurm)
-2) Copy results back and summarize/visualize locally in R
+WGS_pipeline (module-based)
+
+This repo has two modules:
+
+01_wgs/
+  - cluster/: run the WGS pipeline on the cluster (Slurm + conda env)
+  - local/:   summarize metrics + view dashboard locally (R)
+
+02_breseq/ (optional)
+  - cluster/: run breseq on the cluster (variant calling vs reference)
+  - local/:   plot breseq results locally (R)
 
 Start here:
-- Go to cluster folder and start with Cluster setup + run instructions: cluster/README.md
-- Local metrics (R): local/README.md
-
----
-
-## Repository structure
-```text
-wgs-group-pipeline/
-	README.md
-	
-  scripts/
-    WGS_pipelinev2.sh                 # main pipeline script (cluster job runs this)
-	
-  cluster/
-    README.md                         # beginner cluster instructions (setup -> upload -> samplesheet -> submit -> logs)
-	
-	bin/
-      setup_cluster.sh                # one-time: conda env + scratch dirs + symlinks
-      make_samplesheet.sh             # one-time per dataset: generates samples.tsv from data/ (filters out _U1/_U2/untrimmed)
-      submit_wgs.sh                   # submits the job with resources + BUSCO lineage in one command
-	  
-	slurm/
-      run_wgs.slurm                   # Slurm runner (portable; uses SLURM_SUBMIT_DIR)
-	  
-	docs/
-      01_upload_data.md               # rsync/scp recipes + naming rules
-      02_where_results_are.md         # where outputs/logs go
-      03_common_errors.md             # common failures + fixes
-	  
-  local/
-    README.md                         # how to run R scripts locally on results folder
-	
-    metrics/
-      summarize_metrics.R             # creates combined_metrics.csv
-	  
-    reports/
-      WGS_metrics.qmd                 # optional Quarto report (local)
-	  
-  examples/
-    samplesheet_example.tsv
-    naming_examples.md
-	
-```	
-
----
-
-## Workflow overview
-
-### A) Cluster
-- Clone the repo on the cluster
-- Run one-time setup (creates conda env + scratch dirs)
-- Upload FASTQ files to scratch
-- Generate samples.tsv (auto-detect correct read pairs)
-- Submit the pipeline (resources + BUSCO lineage set in one command)
-
-All details: cluster/README.md
-
-### B) Local (R)
-- Copy results back from the cluster (or mount shared storage)
-- Run the R metrics script to generate a CSV summary
-- Optional: render a Quarto report
-
-All details: local/README.md
+  01_wgs/cluster/README.md
+Then:
+  01_wgs/local/README.md
+Optional:
+  02_breseq/cluster/README.md
+  02_breseq/local/README.md

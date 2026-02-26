@@ -43,7 +43,6 @@ if [ ! -f "$SAMPLES_TSV" ]; then
   exit 1
 fi
 
-# Count samples (excluding header)
 n=$(tail -n +2 "$SAMPLES_TSV" | awk -F'\t' 'NF>=3 && $1!="" {c++} END{print c+0}')
 if [ "$n" -eq 0 ]; then
   echo "ERROR: No samples found in $SAMPLES_TSV"
@@ -68,4 +67,4 @@ sbatch \
   --mem="$MEM" \
   --array=1-"$n" \
   --export=ALL,SAMPLES_TSV="$SAMPLES_TSV",REF_GBK="$REF_GBK",OUT_ROOT="$OUT_ROOT" \
-  cluster/breseq/slurm/run_breseq_array.slurm
+  02_breseq/02_breseq/cluster/slurm/run_breseq_array.slurm
