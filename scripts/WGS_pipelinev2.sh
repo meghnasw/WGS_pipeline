@@ -17,7 +17,7 @@ SAMPLES_TSV="${SAMPLES_TSV:-samples.tsv}"
 
 if [ ! -f "$SAMPLES_TSV" ]; then
   echo "ERROR: samplesheet not found: $SAMPLES_TSV"
-  echo "Create it with: bash 01_wgs/cluster/bin/make_samplesheet.sh data samples.tsv"
+  echo "Create it with: bash cluster/bin/make_samplesheet.sh data samples.tsv"
   exit 1
 fi
 

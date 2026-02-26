@@ -12,8 +12,8 @@ mkdir -p "$SCRATCH_ROOT"/{data,results}
 
 echo "[2/8] Loading conda module: $CONDA_MODULE"
 module load "$CONDA_MODULE"
-which conda || true
-conda --version || true
+which conda
+conda --version
 
 echo "[3/8] Backing up and writing ~/.condarc"
 if [ -f "$HOME/.condarc" ]; then
@@ -28,8 +28,14 @@ channels:
 channel_priority: strict
 EOC
 
-echo "[4/8] Creating conda environment at: $ENV_PATH"
-conda create -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc busco
+echo "[4/8] Creating/updating conda environment at: $ENV_PATH"
+if [ -d "$ENV_PATH" ]; then
+  echo "Env already exists: $ENV_PATH"
+  echo "Installing/ensuring required packages..."
+  conda install -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc busco
+else
+  conda create -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc busco
+fi
 
 echo "[5/8] Making conda activate work in shells"
 conda init bash || true
@@ -54,6 +60,6 @@ echo "Scratch root  : $SCRATCH_ROOT"
 echo "Env path      : $ENV_PATH"
 echo ""
 echo "Next:"
-echo "  Upload FASTQs into: $SCRATCH_ROOT/data/"
-echo "  Create samplesheet: bash 01_wgs/cluster/bin/make_samplesheet.sh data samples.tsv"
-echo "  Submit: bash 01_wgs/cluster/bin/submit_wgs.sh --partition standard --time 10:00:00 --cpus 8 --mem 24G --busco-lineage bacteria_odb10"
+echo "  copy WGS_pipelinev2.sh into: $PIPELINE_ROOT/scripts/"
+echo "  upload FASTQs into: $SCRATCH_ROOT/data/"
+echo "  submit: sbatch $PIPELINE_ROOT/cluster/slurm/run_wgs.slurm"
