@@ -9,32 +9,35 @@ FastQC/MultiQC -> Shovill -> QUAST -> Prokka -> BUSCO (optional)
 ------------------------------------------------------------
 0) One-time: clone the repo (on cluster login node)
 ------------------------------------------------------------
+Connect to the University network direclty via WIFI or via VPN
 
 ```bash
+ssh -l <user> cluster.s3it.uzh.ch
 cd ~
-git clone git@github.com:meghnasw/WGS_pipeline.git wgs_pipeline
+git clone https://github.com/meghnasw/WGS_pipeline.git wgs_pipeline
 cd wgs_pipeline
 ```
 
 ------------------------------------------------------------
 1) One-time: cluster setup (env + scratch folders + symlinks)
 ------------------------------------------------------------
+Run:
+
+```bash
+PIPELINE_ROOT="$HOME/wgs_pipeline" SCRATCH_ROOT="/scratch/$USER/wgs_pipeline" bash cluster/bin/setup_cluster.sh
+```
+This step is time-consuming (~30mins)
 
 This creates:
 - env:     ~/wgs_pipeline/env/wgs
 - data:    ~/wgs_pipeline/data    -> /scratch/$USER/wgs_pipeline/data
 - results: ~/wgs_pipeline/results -> /scratch/$USER/wgs_pipeline/results
 
-Run:
-
-```bash
-PIPELINE_ROOT="$HOME/wgs_pipeline" SCRATCH_ROOT="/scratch/$USER/wgs_pipeline" bash cluster/bin/setup_cluster.sh
-```
-
 If setup worked, you should see:
 
+```bash
 ls -lah data results
-
+```
 
 ------------------------------------------------------------
 2) Upload data to the cluster (recommended: rsync)
@@ -57,10 +60,15 @@ EXCLUDED (never processed):
 - anything with _U1 or _U2
 - anything containing "untrimmed"
 
-Your lab’s sequencing data location usually appears as: /Volumes/
+Please note: 
 
-rsync only paired reads to scratch
+```text
+- Your lab’s sequencing data location usually appears as: /Volumes/
+- rsync only paired reads to scratch
+- run the rsync command from a second terminal or powershell window.
+
 Example (copy only trimmed reads; adjust path as needed):
+```
 
 ```bash
 rsync -avP \
@@ -103,6 +111,7 @@ wc -l samples.tsv
 ------------------------------------------------------------
 
 IMPORTANT:
+- Estimated time per sample: 5-10 minutes.
 - You do not edit the slurm script.
 - You set resources in the submit command.
 - BUSCO is enabled by providing --busco-lineage.
@@ -164,6 +173,10 @@ Key outputs:
 7) Copy results back to your local/server storage
 ------------------------------------------------------------
 
+Run the all the following commands from the second terminal or powershell window.
+
+Example (copy only trimmed reads; adjust path as needed):
+```
 Option A: copy entire results folder back to your local machine:
 (run from your laptop)
 ```bash
@@ -199,3 +212,8 @@ rsync -avz --progress \
 rm -rf /scratch/$USER/wgs_pipeline/data/*
 rm -rf /scratch/$USER/wgs_pipeline/results/*
 ```
+
+------------------------------------------------------------
+9) Visualize on ShinyAPP 
+------------------------------------------------------------
+Follow instructions on the github local folder: local/README

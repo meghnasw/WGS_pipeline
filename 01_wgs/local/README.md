@@ -1,56 +1,143 @@
-# 01_wgs: Local workflow (metrics + dashboard)
+# Local metrics (R)
 
-This module is run on your local machine (Mac/Windows/Linux) using R.
+Goal: create a single CSV summary file from a pipeline results folder:
+- contigs + N50 (QUAST)
+- gene count (Prokka)
+- BUSCO completeness (if present)
 
-Inputs:
-- QUAST report folder: quast_multi/
-- MultiQC report: fastqc_multiqc/multiqc/multiqc_report.html
-- Prokka outputs per sample: <sample>/prokka_out/
-- BUSCO outputs per sample (optional): <sample>/busco_out/
-
---------------------------------------------------------------------
-1) Copy results from the cluster to local storage
---------------------------------------------------------------------
-
-Recommended: copy the whole results folder to a local directory.
-
-Example (run on your laptop; adjust paths):
-
-rsync -avz --progress \
-  <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/results/ \
-  /PATH/TO/LOCAL/All_results/
-
-Now your local results_root is:
-  /PATH/TO/LOCAL/All_results
-
---------------------------------------------------------------------
-2) Create combined_metrics.csv
---------------------------------------------------------------------
-
-From the repo root on your laptop:
-
-Rscript 01_wgs/local/metrics/summarize_metrics.R "/PATH/TO/LOCAL/All_results" "/PATH/TO/LOCAL/All_results/combined_metrics.csv"
-
-This produces:
+Output:
 - combined_metrics.csv
 
---------------------------------------------------------------------
-3) Run the dashboard
---------------------------------------------------------------------
+------------------------------------------------------------
+0) Prerequisites
+------------------------------------------------------------
 
-The dashboard expects:
-- combined_metrics.csv in the dashboard folder OR in results_root (recommended: copy it into results_root)
-- multiqc_report.html available (usually at results_root/fastqc_multiqc/multiqc/multiqc_report.html)
+You need:
+- R installed
+- the tidyverse package
 
-Recommended layout:
-  /PATH/TO/LOCAL/All_results/
-    combined_metrics.csv
-    fastqc_multiqc/multiqc/multiqc_report.html
-    quast_multi/
-    <sample folders...>
+In R:
 
-Run:
+    install.packages("tidyverse")
 
-cd 01_wgs/local/dashboard
-Rscript run_dashboard.R "/PATH/TO/LOCAL/All_results"
+------------------------------------------------------------
+1) Get the results folder onto your computer (skip to step 2 if done already)
+------------------------------------------------------------
 
+You need the results folder from the cluster (or a shared storage folder that contains the same structure).
+
+Option A (recommended): copy results from cluster using rsync (Mac/Linux)
+Run this on your laptop/desktop (NOT on the cluster):
+
+```bash
+    rsync -avz --progress \
+      <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/results/ \
+      /path/to/local/results/
+```
+
+Example destination on Mac:
+- /Volumes/.../MyProject/results/
+
+Option B: copy results using Windows PowerShell (scp)
+Windows PowerShell (requires OpenSSH enabled on Windows 10/11):
+
+```bash
+    scp -r <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/results/ C:\Users\<you>\Documents\results\
+```
+
+If you have WinSCP, you can also download via GUI:
+- Remote: /scratch/<user>/wgs_pipeline/results/
+- Local: wherever you want
+
+------------------------------------------------------------
+2) Run the summary script
+------------------------------------------------------------
+Clone the repo locally
+
+Mac Users
+
+```bash 
+git clone https://github.com/meghnasw/WGS_pipeline.git
+cd WGS_pipeline
+```
+
+Windows Users
+
+```bash
+git clone https://github.com/meghnasw/WGS_pipeline.git
+cd WGS_pipeline
+```
+
+Script location in this repo:
+- local/wgs/metrics/summarize_metrics.R
+
+Mac / Linux:
+```bash
+    Rscript local/wgs/metrics/summarize_metrics.R "/path/to/results"
+```
+Example:
+
+Rscript local/wgs/metrics/summarize_metrics.R "/Volumes/.../All_results"
+
+Windows (PowerShell):
+
+Rscript local\wgs\metrics\summarize_metrics.R "C:\Users\<you>\Documents\All_results"
+
+------------------------------------------------------------
+2) OPTIONAL: change the output path
+------------------------------------------------------------
+
+By default the script writes:
+- <results_root>/combined_metrics.csv
+
+Examples:
+- /Volumes/sgr_rk/.../All_results/combined_metrics.csv
+- C:\Users\<you>\Documents\All_results\combined_metrics.csv
+
+If you want to choose a custom output location:
+
+Mac / Linux:
+
+```bash
+    Rscript local/wgs/metrics/summarize_metrics.R "/path/to/results" "/path/to/output/combined_metrics.csv"
+```
+
+Windows:
+
+```bash
+    Rscript local\wgs\metrics\summarize_metrics.R "C:\path\to\results" "C:\path\to\combined_metrics.csv"
+```
+
+------------------------------------------------------------
+Notes / common issues
+------------------------------------------------------------
+
+- If you get: ERROR: QUAST report not found
+  Make sure your results folder contains:
+  - quast_multi/report.tsv
+  (or quast_multi/combined_report.tsv)
+
+- BUSCO is optional.
+  If BUSCO short_summary files are not found, BUSCO columns will be empty/NA.
+
+- The script automatically ignores non-sample folders like:
+  fastqc_multiqc, assemblies_for_qc, quast_multi, busco_downloads, mlst.*, and slurm logs.
+  
+------------------------------------------------------------
+3) View results in the dashboard (Shiny)
+------------------------------------------------------------
+
+Mac / Linux:
+
+```bash
+    Rscript local/wgs/dashboard/run_dashboard.R "/path/to/All_results"
+```
+Windows (PowerShell):
+
+```bash
+    Rscript local\wga\dashboard\run_dashboard.R "C:\path\to\All_results"
+```
+
+The dashboard automatically loads:
+- <results_root>/combined_metrics.csv
+- <results_root>/fastqc_multiqc/multiqc/multiqc_report.html  (if present)
