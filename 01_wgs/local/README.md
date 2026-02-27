@@ -27,7 +27,6 @@ Option B: if you already cloned it earlier, update it:
     cd <PATH_TO_YOUR_EXISTING_wgs_pipeline_REPO>
     git pull
 
-
 ------------------------------------------------------------
 1) Folder structure (local machine)
 ------------------------------------------------------------
