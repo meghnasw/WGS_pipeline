@@ -35,6 +35,7 @@ results/
 
 Your local folder should look like:
 
+```text
 wgs_pipeline/
   ├── 01_wgs/
   │     └── local/
@@ -45,7 +46,7 @@ wgs_pipeline/
   │     ├── busco/
   │     └── <sample folders>
   └── ...
-
+```
 
 If you copied only selected folders, make sure you at least have:
 
