@@ -4,21 +4,41 @@
 #   - <RESULTS_ROOT>/combined_metrics.csv
 #   - <RESULTS_ROOT>/fastqc_multiqc/multiqc/multiqc_report.html (if present)
 
-required_pkgs <- c(
-  "shiny", "readr", "ggplot2", "plotly", "dplyr", "tidyr", "bslib", "colorspace"
-)
+# -------------------------
+# 0) Results root (actually uses user input)
+# -------------------------
+args <- commandArgs(trailingOnly = TRUE)
 
-missing_pkgs <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE)]
-if (length(missing_pkgs) > 0) {
-  cat("\nERROR: Missing R packages:\n  - ", paste(missing_pkgs, collapse = "\n  - "), "\n\n", sep = "")
-  cat("Install them in an interactive R session (recommended):\n\n")
-  cat("  install.packages(c(", paste(sprintf('\"%s\"', missing_pkgs), collapse = ", "), "), repos='https://cloud.r-project.org')\n\n", sep = "")
-  cat("If you are using conda R, prefer installing via conda instead (recommended for Mac):\n\n")
-  cat("  conda install -c conda-forge r-plotly r-crosstalk\n\n")
-  quit(status = 1)
+# Priority:
+# 1) first CLI argument (recommended)
+# 2) env var RESULTS_ROOT
+# 3) current working directory
+results_root <- if (length(args) >= 1 && nzchar(args[1])) {
+  args[1]
+} else {
+  Sys.getenv("RESULTS_ROOT", unset = getwd())
 }
 
-# Load libraries after checks (prevents hard crash)
+results_root <- normalizePath(results_root, winslash = "/", mustWork = FALSE)
+
+# -------------------------
+# 1) renv (project-local packages; works with conda R too)
+# -------------------------
+# Run renv restore from the dashboard folder so it finds renv.lock
+dashboard_dir <- normalizePath("01_wgs/local/dashboard", winslash = "/", mustWork = FALSE)
+old_wd <- getwd()
+setwd(dashboard_dir)
+on.exit(setwd(old_wd), add = TRUE)
+
+if (!requireNamespace("renv", quietly = TRUE)) {
+  install.packages("renv", repos = "https://cloud.r-project.org")
+}
+# restore is fast if already installed
+renv::restore(prompt = FALSE)
+
+# -------------------------
+# 2) Load libraries
+# -------------------------
 library(shiny)
 library(readr)
 library(ggplot2)
@@ -40,27 +60,20 @@ custom_theme <- bs_theme(
 )
 
 # -------------------------
-# Results root (dummy-proof)
+# 3) Inputs (from results_root)
 # -------------------------
-# Prefer environment variable RESULTS_ROOT (set by run_dashboard.R)
-results_root <- Sys.getenv("RESULTS_ROOT", unset = "")
-if (results_root == "") {
-  # fallback: allow running from within a results directory
-  results_root <- getwd()
-}
-results_root <- normalizePath(results_root, winslash = "/", mustWork = FALSE)
-
 metrics_path <- file.path(results_root, "combined_metrics.csv")
-multiqc_dir   <- file.path(results_root, "fastqc_multiqc", "multiqc")
-multiqc_html  <- file.path(multiqc_dir, "multiqc_report.html")
+multiqc_dir  <- file.path(results_root, "fastqc_multiqc", "multiqc")
+multiqc_html <- file.path(multiqc_dir, "multiqc_report.html")
 
-# Fail early with clear error for metrics
 if (!file.exists(metrics_path)) {
   stop(
     "combined_metrics.csv not found.\n",
     "Looked for: ", metrics_path, "\n\n",
-    "Run the metrics script first, e.g.:\n",
-    "  Rscript local/metrics/summarize_metrics.R \"", results_root, "\"\n"
+    "USAGE:\n",
+    "  Rscript 01_wgs/local/dashboard/app.R /path/to/results\n\n",
+    "Then generate metrics first, e.g.:\n",
+    "  Rscript 01_wgs/local/metrics/summarize_metrics.R \"", results_root, "\"\n"
   )
 }
 

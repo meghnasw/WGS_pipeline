@@ -83,11 +83,15 @@ install.packages(c(
 
 From your terminal (inside the repo root):
 
+```bash
 cd wgs_pipeline
+```
 
 Run:
 
+```bash
 Rscript 01_wgs/local/metrics/summarize_metrics.R </PATH/TO/RESULTS>
+```
 
 This script:
 
@@ -97,8 +101,9 @@ This script:
 
 Check:
 
+```bash
 ls <PATH_TO_RESULTS>/combined_metrics.csv
-
+```
 
 ------------------------------------------------------------
 4) Launch the Shiny dashboard
@@ -106,7 +111,9 @@ ls <PATH_TO_RESULTS>/combined_metrics.csv
 
 Run: 
 
-Rscript 01_wgs/local/app.R </PATH/TO/RESULTS>
+```bash
+Rscript 01_wgs/local/dashboard/app.R </PATH/TO/RESULTS>
+```
 
 Your browser should open automatically.
 
@@ -138,38 +145,3 @@ If the app says files are missing:
 If R cannot find a package:
 
 install.packages("missing_package_name")
-
-
-------------------------------------------------------------
-7) Recommended workflow
-------------------------------------------------------------
-
-Cluster:
-  Run full WGS pipeline
-
-Local:
-  Copy results/
-  Run summary_metrics.R
-  Launch Shiny app
-
-
-------------------------------------------------------------
-8) Re-running after new samples
-------------------------------------------------------------
-
-If you add new samples and rerun the cluster pipeline:
-
-1) Copy updated results/ folder
-2) Run summary_metrics.R again
-3) Restart the Shiny app
-
-
-------------------------------------------------------------
-9) No scratch cleanup needed
-------------------------------------------------------------
-
-Local analysis does not use scratch.
-
-All processing is done inside:
-
-results/
