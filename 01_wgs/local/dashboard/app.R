@@ -4,6 +4,19 @@
 #   - <RESULTS_ROOT>/combined_metrics.csv
 #   - <RESULTS_ROOT>/fastqc_multiqc/multiqc/multiqc_report.html (if present)
 
+required_pkgs <- c(
+  "shiny", "readr", "ggplot2", "plotly", "dplyr", "tidyr", "bslib", "colorspace"
+)
+
+missing_pkgs <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+if (length(missing_pkgs) > 0) {
+  cat("\nERROR: Missing R packages:\n  -", paste(missing_pkgs, collapse = "\n  - "), "\n\n", sep = "")
+  cat("Install them by running this in R:\n\n")
+  cat("  install.packages(c(", paste(sprintf('"%s"', missing_pkgs), collapse = ", "), "))\n\n", sep = "")
+  quit(status = 1)
+}
+
+# Load libraries after checks (prevents hard crash)
 library(shiny)
 library(readr)
 library(ggplot2)
@@ -13,12 +26,10 @@ library(tidyr)
 library(bslib)
 library(colorspace)
 
-# NEW: used for SVG export
-suppressPackageStartupMessages({
-  if (!requireNamespace("svglite", quietly = TRUE)) {
-    message("NOTE: Package 'svglite' not installed. SVG export will warn until installed.")
-  }
-})
+# Optional: used for SVG export
+if (!requireNamespace("svglite", quietly = TRUE)) {
+  message("NOTE: Package 'svglite' not installed. SVG export will warn until installed.")
+}
 
 custom_theme <- bs_theme(
   version = 5,

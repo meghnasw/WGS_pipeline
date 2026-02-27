@@ -59,8 +59,11 @@ If you copied only selected folders, make sure you at least have:
 2) Install R packages (one-time setup)
 ------------------------------------------------------------
 
+If you get dependency errors, install missing packages as prompted.
+
 Open R or RStudio and run:
 
+```bash
 install.packages(c(
   "shiny",
   "tidyverse",
@@ -71,7 +74,7 @@ install.packages(c(
   "stringr"
 ))
 
-If you get dependency errors, install missing packages as prompted.
+```
 
 
 ------------------------------------------------------------
@@ -84,34 +87,26 @@ cd wgs_pipeline
 
 Run:
 
-Rscript 01_wgs/local/summary_metrics.R
+Rscript 01_wgs/local/metrics/summarize_metrics.R </PATH/TO/RESULTS>
 
 This script:
 
 - Parses QUAST outputs
 - Parses BUSCO outputs (if present)
 - Combines metrics across samples
-- Writes summary tables to:
-
-results/summary_metrics/
-
 
 Check:
 
-ls results/summary_metrics/
+ls <PATH_TO_RESULTS>/combined_metrics.csv
 
 
 ------------------------------------------------------------
 4) Launch the Shiny dashboard
 ------------------------------------------------------------
 
-From repo root:
+Run: 
 
-Rscript 01_wgs/local/app.R
-
-OR open R and run:
-
-shiny::runApp("01_wgs/local")
+Rscript 01_wgs/local/app.R </PATH/TO/RESULTS>
 
 Your browser should open automatically.
 
