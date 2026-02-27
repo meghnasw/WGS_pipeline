@@ -207,9 +207,10 @@ Key outputs:
 Run the all the following commands from the second terminal or powershell window.
 
 Example (copy only trimmed reads; adjust path as needed):
-```
+
 Option A: copy entire results folder back to your local machine:
 (run from your laptop)
+
 ```bash
 rsync -avz --progress \
   <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/results/ \
@@ -218,6 +219,7 @@ rsync -avz --progress \
 
 Option B: copy only key summaries (faster):
 (run from your laptop)
+
 ```bash
 rsync -avz --progress \
   <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/results/fastqc_multiqc/multiqc/ \
