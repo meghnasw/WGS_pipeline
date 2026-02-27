@@ -4,7 +4,7 @@
   - cluster/: run the WGS pipeline on the cluster (Slurm + conda env)
   - local/:   summarize metrics + view dashboard locally (R)
 
-![WGS Pipeline](images/Pipeline.png)
+<img src="images/wgs_pipeline.png" width="600">
 
 ```text
 Start here:
