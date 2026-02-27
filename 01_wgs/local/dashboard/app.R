@@ -5,39 +5,56 @@
 #   - <RESULTS_ROOT>/fastqc_multiqc/multiqc/multiqc_report.html (if present)
 
 # -------------------------
-# 0) Results root (actually uses user input)
+# 0) Parse input path (dummy-proof)
 # -------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
-# Priority:
-# 1) first CLI argument (recommended)
-# 2) env var RESULTS_ROOT
-# 3) current working directory
-results_root <- if (length(args) >= 1 && nzchar(args[1])) {
-  args[1]
+if (length(args) < 1 || !nzchar(args[1])) {
+  cat("\nUSAGE:\n")
+  cat("  Rscript app.R /path/to/results\n")
+  cat("  Rscript app.R /path/to/combined_metrics.csv\n\n")
+  cat("EXAMPLE (your case):\n")
+  cat("  Rscript 01_wgs/local/dashboard/app.R /Volumes/Meghna_WD/Kuemmerli_group/test_git/results\n\n")
+  quit(status = 1)
+}
+
+input_path <- normalizePath(args[1], winslash = "/", mustWork = FALSE)
+
+# If user provided the CSV directly, derive results_root from it
+if (file.exists(input_path) && grepl("combined_metrics\\.csv$", basename(input_path))) {
+  results_root <- dirname(input_path)
+  metrics_path <- input_path
 } else {
-  Sys.getenv("RESULTS_ROOT", unset = getwd())
+  # Otherwise treat input as results root directory
+  results_root <- input_path
+  metrics_path <- file.path(results_root, "combined_metrics.csv")
 }
 
-results_root <- normalizePath(results_root, winslash = "/", mustWork = FALSE)
-
-# -------------------------
-# 1) renv (project-local packages; works with conda R too)
-# -------------------------
-# Run renv restore from the dashboard folder so it finds renv.lock
-dashboard_dir <- normalizePath("01_wgs/local/dashboard", winslash = "/", mustWork = FALSE)
-old_wd <- getwd()
-setwd(dashboard_dir)
-on.exit(setwd(old_wd), add = TRUE)
-
-if (!requireNamespace("renv", quietly = TRUE)) {
-  install.packages("renv", repos = "https://cloud.r-project.org")
+if (!dir.exists(results_root)) {
+  stop("ERROR: results root directory not found: ", results_root)
 }
-# restore is fast if already installed
-renv::restore(prompt = FALSE)
+
+if (!file.exists(metrics_path)) {
+  stop(
+    "ERROR: combined_metrics.csv not found.\n",
+    "Looked for: ", metrics_path, "\n\n",
+    "You must provide either:\n",
+    "  (1) the results directory containing combined_metrics.csv\n",
+    "      e.g. Rscript app.R /path/to/results\n",
+    "  OR\n",
+    "  (2) the combined_metrics.csv file directly\n",
+    "      e.g. Rscript app.R /path/to/results/combined_metrics.csv\n"
+  )
+}
+
+message("Using results_root: ", results_root)
+message("Using combined_metrics: ", metrics_path)
+
+multiqc_dir  <- file.path(results_root, "fastqc_multiqc", "multiqc")
+multiqc_html <- file.path(multiqc_dir, "multiqc_report.html")
 
 # -------------------------
-# 2) Load libraries
+# 1) Libraries
 # -------------------------
 library(shiny)
 library(readr)
@@ -53,30 +70,15 @@ if (!requireNamespace("svglite", quietly = TRUE)) {
   message("NOTE: Package 'svglite' not installed. SVG export will warn until installed.")
 }
 
-custom_theme <- bs_theme(
+custom_theme <- bslib::bs_theme(
   version = 5,
   bootswatch = "flatly",
-  base_font = font_google("Inter")
+  base_font = bslib::font_google("Inter")
 )
 
 # -------------------------
-# 3) Inputs (from results_root)
+# 2) Load metrics
 # -------------------------
-metrics_path <- file.path(results_root, "combined_metrics.csv")
-multiqc_dir  <- file.path(results_root, "fastqc_multiqc", "multiqc")
-multiqc_html <- file.path(multiqc_dir, "multiqc_report.html")
-
-if (!file.exists(metrics_path)) {
-  stop(
-    "combined_metrics.csv not found.\n",
-    "Looked for: ", metrics_path, "\n\n",
-    "USAGE:\n",
-    "  Rscript 01_wgs/local/dashboard/app.R /path/to/results\n\n",
-    "Then generate metrics first, e.g.:\n",
-    "  Rscript 01_wgs/local/metrics/summarize_metrics.R \"", results_root, "\"\n"
-  )
-}
-
 metrics <- readr::read_csv(metrics_path, show_col_types = FALSE)
 
 # Palette for samples
