@@ -213,25 +213,47 @@ The number should match your number of samples.
 
 
 ------------------------------------------------------------
-8) Run mutation comparison
+8) Compare mutations across samples (gdtools COMPARE + ANNOTATE)
 ------------------------------------------------------------
 
-Use the SAME reference file as above:
+IMPORTANT:
+- Only run this AFTER breseq finished for all samples.
+- This step uses the SAME reference .gbk file.
+- This step runs on the cluster via Slurm.
 
-    REF_GBK=/scratch/$USER/wgs_pipeline/data/breseq/ref/<REFERENCE.gbk>
+From repo root on cluster:
 
-Submit:
+    cd ~/wgs_pipeline
 
-    sbatch \
-      --export=ALL,REF_GBK="$REF_GBK" \
-      02_breseq/cluster/bin/breseq_compare.sh
+(Recommended) Confirm breseq outputs exist:
 
-This generates:
+    find results/breseq -name "output.gd" | head
 
+Set your reference path:
+
+    REF_GBK=/scratch/$USER/wgs_pipeline/data/breseq/ref/<YOUR_REFERENCE>.gbk
+
+Submit the compare job:
+
+    sbatch --export=ALL,REF_GBK="$REF_GBK" 02_breseq/cluster/slurm/run_breseq_compare.slurm
+
+Logs are written to:
+
+    results/breseq/logs/breseq_compare-<jobid>.out
+    results/breseq/logs/breseq_compare-<jobid>.err
+
+Outputs are written to:
+
+    results/breseq/gd_list.txt
     results/breseq/breseq_compare.tsv
     results/breseq/annotated_tsv/
 
+Check:
 
+    wc -l results/breseq/gd_list.txt
+    ls -lh results/breseq/breseq_compare.tsv
+    ls -lh results/breseq/annotated_tsv | head
+	
 ------------------------------------------------------------
 9) Copy results back to your local machine
 ------------------------------------------------------------
