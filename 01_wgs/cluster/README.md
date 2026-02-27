@@ -209,7 +209,7 @@ Run the all the following commands from the second terminal or powershell window
 Example (copy only trimmed reads; adjust path as needed):
 
 Option A: copy entire results folder back to your local machine:
-(run from your laptop)
+(run from the second terminal)
 
 ```bash
 rsync -avz --progress \
