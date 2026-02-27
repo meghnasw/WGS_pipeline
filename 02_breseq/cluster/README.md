@@ -80,21 +80,18 @@ mkdir -p /scratch/mswaya/wgs_pipeline/data/breseq/ref
 
 From your laptop (NOT on cluster):
 
-	rsync -avP \
-	  --include="*_1_trimmed.fastq.gz" \
-	  --include="*_2_trimmed.fastq.gz" \
-	  --exclude="*" \
-	  <PATH_TO_READS>/ \
-	  <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/
+rsync -avP \
+  --include='*_1_trimmed.fastq.gz' \
+  --include='*_2_trimmed.fastq.gz' \
+  --exclude='*' \
+  <PATH_TO_READS>/ \
+  <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/breseq/fastq/
 	  
 Upload reference:
 
-   rsync -avP \
-     --include="*_1_trimmed.fastq.gz" \
-     --include="*_2_trimmed.fastq.gz" \
-     --exclude="*" \
-     <PATH_TO_REFERENCE>/reference.gbk \
-     <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/
+rsync -avP \
+<PATH_TO_REFERENCE>/reference.gbk \
+<user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/breseq/ref
 
 Verify on cluster:
 
@@ -133,7 +130,7 @@ From repo root on cluster:
 Submit:
 
     sbatch --array=1-$(wc -l < data/breseq/breseq_samples.txt) \
-      02_breseq/cluster/breseq_array.sbatch
+      02_breseq/cluster/slurm/run_breseq_array.slurm
 
 This runs one sample per array task.
 
