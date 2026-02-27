@@ -32,9 +32,9 @@ echo "[4/8] Creating/updating conda environment at: $ENV_PATH"
 if [ -d "$ENV_PATH" ]; then
   echo "Env already exists: $ENV_PATH"
   echo "Installing/ensuring required packages..."
-  conda install -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc busco
+  conda install -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc busco breseq
 else
-  conda create -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc busco
+  conda create -y -p "$ENV_PATH" shovill quast prokka pigz fastqc multiqc busco breseq
 fi
 
 echo "[5/8] Making conda activate work in shells"
