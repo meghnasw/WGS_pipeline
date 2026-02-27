@@ -8,17 +8,13 @@ required_pkgs <- c(
   "shiny", "readr", "ggplot2", "plotly", "dplyr", "tidyr", "bslib", "colorspace"
 )
 
-missing_pkgs <- required_pkgs[!sapply(required_pkgs, requireNamespace, quietly = TRUE)]
-
-if (length(missing_pkgs) > 0) {
-  message("Installing missing R packages: ", paste(missing_pkgs, collapse = ", "))
-  install.packages(missing_pkgs, repos = "https://cloud.r-project.org")
-}
 missing_pkgs <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE)]
 if (length(missing_pkgs) > 0) {
-  cat("\nERROR: Missing R packages:\n  -", paste(missing_pkgs, collapse = "\n  - "), "\n\n", sep = "")
-  cat("Install them by running this in R:\n\n")
-  cat("  install.packages(c(", paste(sprintf('"%s"', missing_pkgs), collapse = ", "), "))\n\n", sep = "")
+  cat("\nERROR: Missing R packages:\n  - ", paste(missing_pkgs, collapse = "\n  - "), "\n\n", sep = "")
+  cat("Install them in an interactive R session (recommended):\n\n")
+  cat("  install.packages(c(", paste(sprintf('\"%s\"', missing_pkgs), collapse = ", "), "), repos='https://cloud.r-project.org')\n\n", sep = "")
+  cat("If you are using conda R, prefer installing via conda instead (recommended for Mac):\n\n")
+  cat("  conda install -c conda-forge r-plotly r-crosstalk\n\n")
   quit(status = 1)
 }
 
