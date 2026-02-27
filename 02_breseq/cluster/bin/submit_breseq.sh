@@ -1,70 +1,54 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PARTITION="standard"
-TIME="12:00:00"
-CPUS="4"
-MEM="16G"
-SAMPLES_TSV="samples.tsv"
-REF_GBK=""
-OUT_ROOT="results/breseq"
+# Usage:
+# bash 02_breseq/cluster/bin/submit_breseq.sh --ref data/breseq/ref/myref.gbk [--samples data/breseq/breseq_samples.txt]
 
-usage() {
-  echo "Usage:"
-  echo "  $0 --ref-gbk /path/to/reference.gbk [--samples samples.tsv] [--out results/breseq] [--partition P] [--time HH:MM:SS] [--cpus N] [--mem 16G]"
-  echo
-  echo "Example:"
-  echo "  $0 --ref-gbk data/ref/PAO1.gbk --cpus 4 --mem 16G --time 12:00:00"
-}
+SAMPLES="${SAMPLES:-data/breseq/breseq_samples.txt}"
+REF=""
+
+PARTITION="${PARTITION:-standard}"
+TIME="${TIME:-12:00:00}"
+CPUS="${CPUS:-4}"
+MEM="${MEM:-16G}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --ref) REF="$2"; shift 2 ;;
+    --samples) SAMPLES="$2"; shift 2 ;;
     --partition) PARTITION="$2"; shift 2 ;;
     --time) TIME="$2"; shift 2 ;;
     --cpus) CPUS="$2"; shift 2 ;;
     --mem) MEM="$2"; shift 2 ;;
-    --samples) SAMPLES_TSV="$2"; shift 2 ;;
-    --ref-gbk) REF_GBK="$2"; shift 2 ;;
-    --out) OUT_ROOT="$2"; shift 2 ;;
-    -h|--help) usage; exit 0 ;;
-    *) echo "Unknown option: $1"; usage; exit 1 ;;
+    -h|--help)
+      echo "Usage: $0 --ref path/to/ref.gbk [--samples data/breseq/breseq_samples.txt] [--partition P] [--time T] [--cpus N] [--mem 16G]"
+      exit 0
+      ;;
+    *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
 
-if [ -z "$REF_GBK" ]; then
-  echo "ERROR: --ref-gbk is required"
-  usage
+if [ -z "$REF" ]; then
+  echo "ERROR: --ref is required (GenBank .gbk is strongly recommended)." >&2
   exit 1
 fi
 
-if [ ! -f "$SAMPLES_TSV" ]; then
-  echo "ERROR: samples.tsv not found: $SAMPLES_TSV"
-  echo "Create it with: bash cluster/bin/make_samplesheet.sh data samples.tsv"
-  exit 1
-fi
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+cd "$REPO_ROOT"
 
-n=$(tail -n +2 "$SAMPLES_TSV" | awk -F'\t' 'NF>=3 && $1!="" {c++} END{print c+0}')
-if [ "$n" -eq 0 ]; then
-  echo "ERROR: No samples found in $SAMPLES_TSV"
-  exit 1
-fi
+[ -f "$SAMPLES" ] || { echo "ERROR: samples file not found: $SAMPLES" >&2; exit 1; }
+[ -f "$REF" ] || { echo "ERROR: ref file not found: $REF" >&2; exit 1; }
+
+N=$(wc -l < "$SAMPLES" | tr -d ' ')
+[ "$N" -gt 0 ] || { echo "ERROR: no lines in $SAMPLES" >&2; exit 1; }
 
 mkdir -p results/breseq/logs
-
-echo "Submitting breseq array job:"
-echo "  samples:    $n"
-echo "  ref:        $REF_GBK"
-echo "  out:        $OUT_ROOT"
-echo "  partition:  $PARTITION"
-echo "  time:       $TIME"
-echo "  cpus:       $CPUS"
-echo "  mem:        $MEM"
 
 sbatch \
   --partition="$PARTITION" \
   --time="$TIME" \
   --cpus-per-task="$CPUS" \
   --mem="$MEM" \
-  --array=1-"$n" \
-  --export=ALL,SAMPLES_TSV="$SAMPLES_TSV",REF_GBK="$REF_GBK",OUT_ROOT="$OUT_ROOT" \
-  02_breseq/02_breseq/cluster/slurm/run_breseq_array.slurm
+  --array="1-$N" \
+  --export=ALL,BRESEQ_SAMPLES="$SAMPLES",BRESEQ_REF="$REF" \
+  02_breseq/cluster/slurm/run_breseq_array.slurm

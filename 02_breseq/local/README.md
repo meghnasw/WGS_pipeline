@@ -1,13 +1,18 @@
-# 02_breseq: Local workflow (plots)
+# 02_breseq (local)
 
-Input:
-- breseq_all_samples_long.tsv
+This folder is for optional local inspection / plotting of breseq outputs.
 
-Run:
+Cluster outputs are in:
+results/breseq/
 
-Rscript 02_breseq/local/plots/run_breseq_plots.R \
-  "/PATH/TO/breseq_all_samples_long.tsv" \
-  "/PATH/TO/output_plots_folder"
+Useful files:
+- results/breseq/breseq_compare.tsv
+- results/breseq/annotated_tsv/<sample>.tsv
+- results/breseq/<sample>/output/ (breseq HTML + GD files)
 
-Outputs:
-- PNG plots written to the output folder
+Recommended workflow:
+1) Run the cluster steps in `02_breseq/cluster/README.md`
+2) Copy `results/breseq/` back to your local machine (or open it on the cluster)
+3) Inspect:
+   - breseq HTML reports inside each sample folder
+   - compare/annotated TSVs for summaries

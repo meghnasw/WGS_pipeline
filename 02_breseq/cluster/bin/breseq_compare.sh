@@ -1,59 +1,32 @@
-#!/usr/bin/env bash
+#!/bin/bash
+#SBATCH --job-name=breseq_compare
+#SBATCH --partition=standard
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=32G
+#SBATCH --time=02:00:00
+#SBATCH --output=results/breseq/logs/breseq_compare-%j.out
+#SBATCH --error=results/breseq/logs/breseq_compare-%j.err
+
 set -euo pipefail
 
-OUT_ROOT="${OUT_ROOT:-results/breseq}"
-REF_GBK="${REF_GBK:-}"
-COMPARE_TSV="${COMPARE_TSV:-$OUT_ROOT/breseq_compare.tsv}"
-ANN_DIR="${ANN_DIR:-$OUT_ROOT/annotated_tsv}"
-LONG_TSV="${LONG_TSV:-$OUT_ROOT/breseq_all_samples_long.tsv}"
+module load miniforge3/25.3.0-3
+source "$(conda info --base)/etc/profile.d/conda.sh"
 
-if [ -z "$REF_GBK" ]; then
-  echo "ERROR: REF_GBK not set. Example:"
-  echo "  REF_GBK=/path/to/reference.gbk OUT_ROOT=results/breseq bash breseq/cluster/bin/breseq_compare.sh"
-  exit 1
-fi
-if [ ! -f "$REF_GBK" ]; then
-  echo "ERROR: reference GBK not found: $REF_GBK"
-  exit 1
-fi
+cd "$SLURM_SUBMIT_DIR"
+conda activate "$SLURM_SUBMIT_DIR/env/wgs"
 
-mkdir -p "$OUT_ROOT" "$ANN_DIR"
+OUT="results/breseq"
+REF="${BRESEQ_REF:-}"
+LIST="$OUT/gd_list.txt"
 
-gd_list="$OUT_ROOT/gd_list.txt"
-find "$OUT_ROOT" -type f -name "output.gd" | sort > "$gd_list"
+[ -f "$LIST" ] || { echo "ERROR: gd_list.txt not found. Create it with: bash 02_breseq/cluster/bin/make_gd_list.sh" >&2; exit 1; }
+[ -f "$REF" ] || { echo "ERROR: ref file not found (set BRESEQ_REF): $REF" >&2; exit 1; }
 
-if [ ! -s "$gd_list" ]; then
-  echo "ERROR: No output.gd files found under $OUT_ROOT"
-  exit 1
-fi
+mkdir -p "$OUT/annotated_tsv" "$OUT/logs"
 
-echo "Found $(wc -l < "$gd_list") GD files."
-
-if [[ ! -s "$COMPARE_TSV" ]]; then
-  echo "Running gdtools COMPARE..."
-  gdtools COMPARE -r "$REF_GBK" -f TSV -o "$COMPARE_TSV" $(cat "$gd_list")
-else
-  echo "Skipping COMPARE (exists): $COMPARE_TSV"
-fi
+gdtools COMPARE -r "$REF" -f TSV -o "$OUT/breseq_compare.tsv" $(cat "$LIST")
 
 while read -r gd; do
-  sample=$(basename "$(dirname "$gd")")
-  out_tsv="$ANN_DIR/$sample.tsv"
-
-  if [[ -s "$out_tsv" ]]; then
-    echo "Skipping ANNOTATE (exists): $out_tsv"
-  else
-    echo "Annotating: $sample"
-    gdtools ANNOTATE -r "$REF_GBK" -f TSV -o "$out_tsv" "$gd"
-  fi
-done < "$gd_list"
-
-first=$(ls "$ANN_DIR"/*.tsv | head -n 1)
-echo -e "sample\t$(head -n 1 "$first")" > "$LONG_TSV"
-
-for f in "$ANN_DIR"/*.tsv; do
-  s=$(basename "$f" .tsv)
-  tail -n +2 "$f" | sed "s/^/${s}\t/" >> "$LONG_TSV"
-done
-
-ls -lh "$LONG_TSV"
+  s=$(basename "$(dirname "$(dirname "$gd")")")
+  gdtools ANNOTATE -r "$REF" -f TSV -o "$OUT/annotated_tsv/$s.tsv" "$gd"
+done < "$LIST"

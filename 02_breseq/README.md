@@ -1,23 +1,14 @@
-# breseq Pipeline (cluster run + local R metrics)
+# breseq module (02_breseq)
 
-## Pipeline Overview
+This module runs **breseq** against a **user-provided reference** on the cluster, then supports local plotting/inspection.
 
-There are two main parts of this pipeline:
+Structure:
 
-### Part 1 – `cluster/`
-Run breseq on the cluster (Slurm + conda environment) for experimental evolution experiments against a reference genome.
+- `02_breseq/cluster/` — run breseq + gdtools on the cluster (Slurm + conda)
+- `02_breseq/local/` — optional local visualization / inspection
 
-### Part 2 – `local/`
-Summarize breseq results and visualize variant metrics locally (R).
-
----
-
-## Getting Started
+Outputs are written to: `results/breseq/`
 
 Start here:
-
-`02_breseq/cluster/README.md`
-
-Then:
-
-`02_breseq/local/README.md`
+- Cluster instructions: `02_breseq/cluster/README.md`
+- Local instructions: `02_breseq/local/README.md`

@@ -1,69 +1,87 @@
-# 02_breseq: Cluster workflow (optional module)
+# 02_breseq (cluster)
 
-This module runs breseq on the cluster (variant calling vs a reference).
+This runs breseq as a **Slurm array** using the conda environment at `env/wgs`.
 
-Prereqs:
-- Conda env already created via: 01_wgs/cluster/bin/setup_cluster.sh
-- breseq inputs uploaded to scratch (see below)
+## Requirements
 
---------------------------------------------------------------------
-1) Prepare inputs on scratch
---------------------------------------------------------------------
+- You already set up the conda env (same one used by `01_wgs`):
+	- `env/wgs` must contain `breseq` (and `gdtools`, which comes with breseq)
+- You have reads on the cluster (FASTQ gz)
+- You have a reference file on the cluster
 
-Recommended scratch layout:
+Important: breseq works best with a **GenBank reference** (`.gbk`) that has annotations.
+If you only have a FASTA, breseq can run, but annotation in outputs will be limited.
 
-/scratch/$USER/wgs_pipeline/data/breseq/
-  breseq_samples.txt
-  ref/<reference>.gbk
-  reads/<sample>_1.fastq.gz
-  reads/<sample>_2.fastq.gz
+## Inputs
 
-breseq_samples.txt should contain one prefix per line, WITHOUT _1/_2.
-Example line:
-/scratch/$USER/wgs_pipeline/data/breseq/reads/sampleA
+### 1) Reads
+You can keep using the same `samples.tsv` as `01_wgs` (recommended).
 
-That means files exist:
-.../sampleA_1.fastq.gz
-.../sampleA_2.fastq.gz
+`samples.tsv` format (tab-separated, header required):
 
---------------------------------------------------------------------
-2) Run breseq as a Slurm array
---------------------------------------------------------------------
+sample_id    r1_path                   r2_path
+S01          data/S01_1.fastq.gz        data/S01_2.fastq.gz
 
-From ~/wgs_pipeline (cluster):
+### 2) Reference (user-provided)
+Users must copy the reference to the cluster (same way as the data), for example:
 
-sbatch --array=1-<N> 02_breseq/cluster/slurm/run_breseq_array.slurm
+data/breseq/ref/my_reference.gbk
 
-Where <N> = number of lines in breseq_samples.txt:
+## Step 1 — Create breseq sample list
 
-wc -l /scratch/$USER/wgs_pipeline/data/breseq/breseq_samples.txt
+This module uses a simple “prefix list” (one prefix per line), like your original pipeline.
+Generate it from `samples.tsv`:
 
-Outputs will go to:
-  /scratch/$USER/wgs_pipeline/results/breseq/<sample>/
+bash 02_breseq/cluster/bin/make_breseq_samples.sh samples.tsv data/breseq/breseq_samples.txt
 
-Logs:
-  results/breseq-<jobid>_<taskid>.out
-  results/breseq-<jobid>_<taskid>.err
+This creates lines like:
+data/S01
+data/S02
+...
 
---------------------------------------------------------------------
-3) Compare / annotate outputs (gdtools)
---------------------------------------------------------------------
+breseq then expects:
+data/S01_1.fastq.gz and data/S01_2.fastq.gz
 
-Run (from ~/wgs_pipeline):
+## Step 2 — Run breseq array
 
-bash 02_breseq/cluster/bin/breseq_compare.sh
+Submit with a user-provided reference:
+
+bash 02_breseq/cluster/bin/submit_breseq.sh --ref data/breseq/ref/my_reference.gbk
+
+Optional overrides:
+--samples data/breseq/breseq_samples.txt
+--partition standard
+--time 12:00:00
+--cpus 4
+--mem 16G
+
+Logs go to:
+results/breseq/logs/
+
+Outputs go to:
+results/breseq/<sample>/...
+
+## Step 3 — Create gd list
+
+After array finishes:
+
+bash 02_breseq/cluster/bin/make_gd_list.sh results/breseq
+
+This creates:
+results/breseq/gd_list.txt
+
+## Step 4 — gdtools COMPARE + ANNOTATE
+
+Run compare/annotate on the cluster (reference must be the same as used for breseq).
+We pass it as an env var:
+
+BRESEQ_REF=data/breseq/ref/my_reference.gbk sbatch 02_breseq/cluster/slurm/run_breseq_compare.slurm
 
 This produces:
 - results/breseq/breseq_compare.tsv
-- results/breseq/breseq_all_samples_long.tsv
+- results/breseq/annotated_tsv/<sample>.tsv
 
---------------------------------------------------------------------
-4) Copy the combined TSV to your laptop
---------------------------------------------------------------------
+## Notes
 
-rsync -avz --progress \
-  <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/results/breseq/breseq_all_samples_long.tsv \
-  /PATH/TO/LOCAL/breseq/
-
-Then follow:
-02_breseq/local/README.md
+- If breseq is missing, install into env/wgs:
+  conda install -p env/wgs -y breseq

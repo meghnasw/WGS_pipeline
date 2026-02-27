@@ -11,6 +11,4 @@ source "$(conda info --base)/etc/profile.d/conda.sh"
 cd "$SLURM_SUBMIT_DIR"
 conda activate "$SLURM_SUBMIT_DIR/env/wgs"
 
-mkdir -p results/breseq/logs
-
-bash breseq/cluster/bin/breseq_one.sh
+bash 02_breseq/cluster/bin/breseq_one.sh
