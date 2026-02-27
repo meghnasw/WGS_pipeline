@@ -57,4 +57,4 @@ sbatch \
   --cpus-per-task="$CPUS" \
   --mem="$MEM" \
   --export=ALL,LINEAGE="$BUSCO_LINEAGE",BUSCO_DOWNLOADS="$BUSCO_DOWNLOADS" \
-  01_wgs/cluster/slurm/run_wgs.slurm
+  cluster/slurm/run_wgs.slurm
