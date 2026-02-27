@@ -24,7 +24,7 @@ cd wgs_pipeline
 Run:
 
 ```bash
-PIPELINE_ROOT="$HOME/wgs_pipeline" SCRATCH_ROOT="/scratch/$USER/wgs_pipeline" bash cluster/bin/setup_cluster.sh
+PIPELINE_ROOT="$HOME/wgs_pipeline" SCRATCH_ROOT="/scratch/$USER/wgs_pipeline" bash 01_wgs/cluster/bin/setup_cluster.sh
 ```
 This step is time-consuming (~30mins)
 
@@ -95,7 +95,7 @@ From repo root on cluster:
 
 ```bash
 cd ~/wgs_pipeline
-bash cluster/bin/make_samplesheet.sh data samples.tsv
+bash 01_wgs/cluster/bin/make_samplesheet.sh data samples.tsv
 ```
 
 Inspect:
@@ -150,7 +150,7 @@ Notes:
 Example with BUSCO (recommended):
 ```bash
 cd ~/wgs_pipeline
-bash cluster/bin/submit_wgs.sh \
+bash 01_wgs/cluster/bin/submit_wgs.sh \
   --partition standard \
   --time 10:00:00 \
   --cpus 8 \
@@ -164,7 +164,7 @@ BUSCO downloads will go to:
 
 Example without BUSCO:
 ```bash
-bash cluster/bin/submit_wgs.sh --partition standard --time 10:00:00 --cpus 8 --mem 24G
+bash 01_wgs/cluster/bin/submit_wgs.sh --partition standard --time 10:00:00 --cpus 8 --mem 24G
 ```
 
 ------------------------------------------------------------
