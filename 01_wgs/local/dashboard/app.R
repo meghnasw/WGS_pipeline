@@ -13,6 +13,13 @@ library(tidyr)
 library(bslib)
 library(colorspace)
 
+# NEW: used for SVG export
+suppressPackageStartupMessages({
+  if (!requireNamespace("svglite", quietly = TRUE)) {
+    message("NOTE: Package 'svglite' not installed. SVG export will warn until installed.")
+  }
+})
+
 custom_theme <- bs_theme(
   version = 5,
   bootswatch = "flatly",
@@ -82,7 +89,14 @@ ui <- navbarPage(
       helpText(paste0("Results folder: ", results_root)),
       textInput("sample_filter", "Filter samples (substring or regex):", ""),
       helpText("Tip: try filtering by '3A06' or 's3b'."),
-      helpText("Use the filter to restrict plots and tables to a subset of samples.")
+      helpText("Use the filter to restrict plots and tables to a subset of samples."),
+      
+      tags$hr(),
+      
+      # NEW: export controls
+      textInput("export_dir", "Export folder (SVG):", value = file.path(results_root, "dashboard_exports")),
+      actionButton("export_svg", "Download all plots as SVG"),
+      helpText("Creates one .svg per plot in the export folder.")
     ),
     
     mainPanel(
@@ -164,26 +178,115 @@ server <- function(input, output, session) {
     df
   })
   
-  output$shovill_quast_plot <- renderPlotly({
+  # -------------------------
+  # NEW: build ggplot objects (for SVG export) with minimal duplication
+  # -------------------------
+  gg_shovill_quast <- reactive({
     df <- filtered_metrics()
-    req(nrow(df) > 0)
+    validate(need(nrow(df) > 0, "No samples after filtering."))
     
     key_metrics <- intersect(c("contigs", "n50"), names(df))
-    req(length(key_metrics) > 0)
+    validate(need(length(key_metrics) > 0, "Missing contigs/n50 in metrics."))
     
     long_df <- df %>%
       select(sample, all_of(key_metrics)) %>%
       pivot_longer(-sample, names_to = "metric", values_to = "value")
     
-    p <- ggplot(long_df, aes(x = sample, y = value, fill = sample)) +
+    ggplot(long_df, aes(x = sample, y = value, fill = sample)) +
       geom_col(linewidth = 0.2) +
       facet_wrap(~ metric, scales = "free_y") +
       scale_fill_manual(values = sample_palette) +
       plot_theme +
       theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
       labs(x = "Sample", y = "Value")
+  })
+  
+  gg_prokka <- reactive({
+    df <- filtered_metrics()
+    validate(need(nrow(df) > 0, "No samples after filtering."))
+    validate(need("gene_count" %in% names(df), "gene_count missing in metrics."))
     
-    ggplotly(p)
+    ggplot(df, aes(x = sample, y = gene_count, fill = sample)) +
+      geom_col(linewidth = 0.2) +
+      scale_fill_manual(values = sample_palette) +
+      plot_theme +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
+      labs(x = "Sample", y = "gene_count")
+  })
+  
+  gg_busco <- reactive({
+    df <- filtered_metrics()
+    validate(need(nrow(df) > 0, "No samples after filtering."))
+    validate(need("busco_complete" %in% names(df), "BUSCO columns not present."))
+    
+    df <- df %>% mutate(busco_complete = as.numeric(busco_complete))
+    
+    ggplot(df, aes(x = sample, y = busco_complete, fill = sample)) +
+      geom_col(linewidth = 0.2) +
+      scale_fill_manual(values = sample_palette) +
+      plot_theme +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
+      labs(x = "Sample", y = "BUSCO completeness (%)")
+  })
+  
+  gg_scatter_contigs_n50 <- reactive({
+    df <- filtered_metrics()
+    validate(need(nrow(df) > 0, "No samples after filtering."))
+    validate(need(all(c("contigs", "n50") %in% names(df)), "contigs/n50 missing in metrics."))
+    
+    ggplot(df, aes(x = contigs, y = n50, colour = sample)) +
+      geom_point(size = 3, alpha = 0.9) +
+      scale_colour_manual(values = sample_palette) +
+      plot_theme +
+      theme(legend.position = "none") +
+      labs(x = "Number of contigs", y = "N50")
+  })
+  
+  gg_scatter_n50_genes <- reactive({
+    df <- filtered_metrics()
+    validate(need(nrow(df) > 0, "No samples after filtering."))
+    validate(need(all(c("n50", "gene_count") %in% names(df)), "n50/gene_count missing in metrics."))
+    
+    ggplot(df, aes(x = n50, y = gene_count, colour = sample)) +
+      geom_point(size = 3, alpha = 0.9) +
+      scale_colour_manual(values = sample_palette) +
+      plot_theme +
+      theme(legend.position = "none") +
+      labs(x = "N50", y = "Gene count")
+  })
+  
+  gg_scatter_busco_n50 <- reactive({
+    df <- filtered_metrics()
+    validate(need(nrow(df) > 0, "No samples after filtering."))
+    validate(need(all(c("n50", "busco_complete") %in% names(df)), "n50/busco_complete missing in metrics."))
+    
+    df <- df %>%
+      mutate(
+        busco_complete = as.numeric(busco_complete),
+        qc_busco_flag = ifelse(!is.na(busco_complete) & busco_complete < 95, "FLAG: BUSCO < 95%", "OK")
+      )
+    
+    ggplot(df, aes(
+      x = n50, y = busco_complete, colour = sample,
+      text = paste0(
+        "Sample: ", sample,
+        "<br>N50: ", n50,
+        "<br>BUSCO complete: ", busco_complete,
+        "<br>Status: ", qc_busco_flag
+      )
+    )) +
+      geom_point(size = 3, alpha = 0.9) +
+      scale_colour_manual(values = sample_palette) +
+      plot_theme +
+      theme(legend.position = "none") +
+      labs(x = "N50", y = "BUSCO completeness (%)")
+  })
+  
+  # -------------------------
+  # Plotly outputs (unchanged behavior; now reuse ggplot reactives)
+  # -------------------------
+  output$shovill_quast_plot <- renderPlotly({
+    ggplotly(gg_shovill_quast())
   })
   
   output$shovill_quast_table <- renderTable({
@@ -193,17 +296,7 @@ server <- function(input, output, session) {
   })
   
   output$prokka_plot <- renderPlotly({
-    df <- filtered_metrics()
-    req(nrow(df) > 0, "gene_count" %in% names(df))
-    
-    p <- ggplot(df, aes(x = sample, y = gene_count, fill = sample)) +
-      geom_col(linewidth = 0.2) +
-      scale_fill_manual(values = sample_palette) +
-      plot_theme +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
-      labs(x = "Sample", y = "gene_count")
-    
-    ggplotly(p)
+    ggplotly(gg_prokka())
   })
   
   output$prokka_table <- renderTable({
@@ -215,17 +308,7 @@ server <- function(input, output, session) {
   output$busco_plot <- renderPlotly({
     df <- filtered_metrics()
     if (!"busco_complete" %in% names(df) || nrow(df) == 0) return(NULL)
-    
-    df <- df %>% mutate(busco_complete = as.numeric(busco_complete))
-    
-    p <- ggplot(df, aes(x = sample, y = busco_complete, fill = sample)) +
-      geom_col(linewidth = 0.2) +
-      scale_fill_manual(values = sample_palette) +
-      plot_theme +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
-      labs(x = "Sample", y = "BUSCO completeness (%)")
-    
-    ggplotly(p)
+    ggplotly(gg_busco())
   })
   
   output$busco_table <- renderTable({
@@ -276,62 +359,62 @@ server <- function(input, output, session) {
   })
   
   output$scatter_contigs_n50 <- renderPlotly({
-    df <- filtered_metrics()
-    req(nrow(df) > 0)
-    req(all(c("contigs", "n50") %in% names(df)))
-    
-    p <- ggplot(df, aes(x = contigs, y = n50, colour = sample)) +
-      geom_point(size = 3, alpha = 0.9) +
-      scale_colour_manual(values = sample_palette) +
-      plot_theme +
-      theme(legend.position = "none") +
-      labs(x = "Number of contigs", y = "N50")
-    
-    ggplotly(p)
+    ggplotly(gg_scatter_contigs_n50())
   })
   
   output$scatter_n50_genes <- renderPlotly({
-    df <- filtered_metrics()
-    req(nrow(df) > 0)
-    req(all(c("n50", "gene_count") %in% names(df)))
-    
-    p <- ggplot(df, aes(x = n50, y = gene_count, colour = sample)) +
-      geom_point(size = 3, alpha = 0.9) +
-      scale_colour_manual(values = sample_palette) +
-      plot_theme +
-      theme(legend.position = "none") +
-      labs(x = "N50", y = "Gene count")
-    
-    ggplotly(p)
+    ggplotly(gg_scatter_n50_genes())
   })
   
   output$scatter_busco_n50 <- renderPlotly({
-    df <- filtered_metrics()
-    if (nrow(df) == 0) return(NULL)
-    if (!all(c("n50", "busco_complete") %in% names(df))) return(NULL)
-    
-    df <- df %>%
-      mutate(
-        busco_complete = as.numeric(busco_complete),
-        qc_busco_flag = ifelse(!is.na(busco_complete) & busco_complete < 95, "FLAG: BUSCO < 95%", "OK")
-      )
-    
-    p <- ggplot(df, aes(
-      x = n50, y = busco_complete, colour = sample,
-      text = paste0(
-        "Sample: ", sample,
-        "<br>N50: ", n50,
-        "<br>BUSCO complete: ", busco_complete,
-        "<br>Status: ", qc_busco_flag
-      )
-    )) +
-      geom_point(size = 3, alpha = 0.9) +
-      scale_colour_manual(values = sample_palette) +
-      plot_theme +
-      theme(legend.position = "none") +
-      labs(x = "N50", y = "BUSCO completeness (%)")
-    
+    p <- gg_scatter_busco_n50()
     ggplotly(p, tooltip = "text")
+  })
+  
+  # -------------------------
+  # NEW: export SVGs (server-side)
+  # -------------------------
+  observeEvent(input$export_svg, {
+    validate(need(requireNamespace("svglite", quietly = TRUE),
+                  "Please install svglite to export SVGs: install.packages('svglite')"))
+    
+    outdir <- normalizePath(input$export_dir, winslash = "/", mustWork = FALSE)
+    dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
+    
+    safe_filter <- if (nzchar(input$sample_filter)) {
+      gsub("[^A-Za-z0-9._-]+", "_", input$sample_filter)
+    } else {
+      "ALL"
+    }
+    
+    # helper
+    save_svg <- function(plot_obj, filename, width = 12, height = 6) {
+      f <- file.path(outdir, filename)
+      ggplot2::ggsave(f, plot_obj, device = svglite::svglite, width = width, height = height)
+      f
+    }
+    
+    saved <- c()
+    saved <- c(saved, save_svg(gg_shovill_quast(), paste0("01_shovill_quast_", safe_filter, ".svg"), 14, 7))
+    saved <- c(saved, save_svg(gg_prokka(),       paste0("02_prokka_", safe_filter, ".svg"),       14, 6))
+    
+    # BUSCO plot only if available
+    if ("busco_complete" %in% names(filtered_metrics())) {
+      saved <- c(saved, save_svg(gg_busco(), paste0("03_busco_", safe_filter, ".svg"), 14, 6))
+    }
+    
+    saved <- c(saved, save_svg(gg_scatter_contigs_n50(), paste0("04_scatter_contigs_n50_", safe_filter, ".svg"), 8, 6))
+    saved <- c(saved, save_svg(gg_scatter_n50_genes(),   paste0("05_scatter_n50_genes_", safe_filter, ".svg"),   8, 6))
+    
+    # BUSCO scatter only if available
+    if (all(c("n50", "busco_complete") %in% names(filtered_metrics()))) {
+      saved <- c(saved, save_svg(gg_scatter_busco_n50(), paste0("06_scatter_busco_n50_", safe_filter, ".svg"), 8, 6))
+    }
+    
+    showNotification(
+      paste0("Saved ", length(saved), " SVG files to: ", outdir),
+      type = "message", duration = 8
+    )
   })
 }
 
