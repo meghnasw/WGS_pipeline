@@ -1,8 +1,9 @@
 # WGS Pipeline (cluster run + local R metrics)
 
-01_wgs/
-  - cluster/: run the WGS pipeline on the cluster (Slurm + conda env)
-  - local/:   summarize metrics + view dashboard locally (R)
+There are two main parts of this pipeline:
+
+  Part 1 - cluster/: run the WGS pipeline on the cluster (Slurm + conda env)
+  Part 2- local/:   summarize metrics + view dashboard locally (R)
 
 ```text
 Start here:
