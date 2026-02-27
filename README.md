@@ -1,29 +1,40 @@
-## Repository Structure
+# WGS_pipeline
 
-This repository contains a Whole-Genome Sequencing (WGS) pipeline wiht two modules. The first module contains a bioinformatics pipeline from processing raw WGS data to assembled genomes and ends with a Shiny App to visualize all the quality control checks. The second module is an optional module that contains Breseq which is useful in analyzing experimental evolution data. In both modules the analyses is set up on the Science Cluster at UZH and the vizualisations are generated in R locally.
+This repository contains a Whole-Genome Sequencing (WGS) pipeline with two modules:
+
+1. **01_wgs/** — from raw WGS reads to assembled genomes + QC summaries (cluster run + local R dashboard)
+2. **02_breseq/** *(optional)* — breseq-based variant calling vs a reference (cluster run + local plots)
+
+Both modules are designed for:
+- **Science Cluster (UZH)** for compute (Slurm + conda)
+- **Local machine** for visualization in **R**
 
 ---
 
+## Repository structure
+
 ### 01_wgs/
+- **cluster/**  
+  Run the WGS pipeline on the cluster (Slurm + conda environment)
 
-**cluster/**  
-Run the WGS pipeline on the cluster (Slurm + conda environment).
+- **local/**  
+  Summarize metrics and view the dashboard locally (R)
 
-**local/**  
-Summarize metrics and view the dashboard locally (R).
+Start here: **01_wgs/README.md**
 
 ---
 
 ### 02_breseq/ (optional)
+- **cluster/**  
+  Run breseq on the cluster (variant calling vs reference)
 
-**cluster/**  
-Run breseq on the cluster (variant calling vs reference).
-
-**local/**  
-Plot breseq results locally (R).
+- **local/**  
+  Plot breseq results locally (R)
 
 ---
 
-## Getting Started
+## Getting started
 
-Start here: 01_wgs/
+- WGS module: `01_wgs/README.md`
+- Cluster WGS instructions: `01_wgs/cluster/README.md`
+- Local WGS dashboard: `01_wgs/local/README.md`
