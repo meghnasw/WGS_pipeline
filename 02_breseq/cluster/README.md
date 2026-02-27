@@ -1,249 +1,175 @@
-# 02_breseq on the cluster
+# breseq pipeline on the cluster (beginner workflow)
 
-This runs breseq as a **Slurm array** using the conda environment at `env/wgs`.
-
-------------------------------------------------------------
-Requirements
-------------------------------------------------------------
-
-- You already set up the conda env (same one used by `01_wgs`):
-	- `env/wgs` must contain `breseq` (and `gdtools`, which comes with breseq)
-- You have reads on the cluster (FASTQ gz)
-- You have a reference file on the cluster
-
-Important: breseq works best with a **GenBank reference** (`.gbk`) that has annotations.
-If you only have a FASTA, breseq can run, but annotation in outputs will be limited.
-
-
-------------------------------------------------------------
-Inputs
-
-1) Reads
-
-You can keep using the same `samples.tsv` as `01_wgs` (recommended).
-
-`samples.tsv` format (tab-separated, header required):
-
-sample_id    r1_path                   r2_path
-S01          data/S01_1.fastq.gz        data/S01_2.fastq.gz
-
-2) Reference (user-provided)
-Users must copy the reference to the cluster (same way as the data), for example:
-
-data/breseq/ref/my_reference.gbk
-
-
-------------------------------------------------------------
-0) One-time assumption
-------------------------------------------------------------
-
-You already completed the WGS cluster setup.
-
-If not, FIRST follow:
-01_wgs/cluster/README.md
-
-breseq uses the SAME folders created during WGS setup:
-
-env:     ~/wgs_pipeline/env/wgs
-data:    ~/wgs_pipeline/data    -> /scratch/$USER/wgs_pipeline/data
-results: ~/wgs_pipeline/results -> /scratch/$USER/wgs_pipeline/results
-
-Make sure breseq is installed in the env:
-
-```bash
-    module load miniforge3/25.3.0-3
-    source "$(conda info --base)/etc/profile.d/conda.sh"
-    conda install -p ~/wgs_pipeline/env/wgs -y breseq
-```
-
-------------------------------------------------------------
-1) Upload your reference file to the cluster
-------------------------------------------------------------
-
-breseq requires a reference genome.
-
-Recommended format:
-- .gbk (GenBank, annotated)
-
-Create a reference folder on the cluster:
-
-```bash
-    mkdir -p /scratch/$USER/wgs_pipeline/data/breseq/ref
-```
-
-Upload the reference from your laptop:
-
-```bash
-    scp my_reference.gbk <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/breseq/ref/
-```
-
-Verify upload (on cluster):
-
-```bash
-    ls /scratch/$USER/wgs_pipeline/data/breseq/ref/
-```
+This pipeline runs on the S3IT cluster using Slurm + the existing conda env.
 
 IMPORTANT:
-You must use the SAME reference file for:
-- breseq
-- gdtools COMPARE
-- gdtools ANNOTATE
+All commands in this README are run ON THE CLUSTER
+(except rsync upload commands, which are run from your laptop).
 
+Goal:
+- Log into the cluster
+- Upload FASTQ files AND a reference .gbk file
+- Create sample list
+- Submit breseq as a Slurm array
+- Compare mutations across samples
 
 ------------------------------------------------------------
-2) Create breseq sample list
+0) Log into the cluster
 ------------------------------------------------------------
 
-breseq uses a simple prefix list like:
+You must be on the University network
+(direct WIFI or VPN).
 
-data/S01
-data/S02
-data/S03
+From your laptop terminal:
 
-If you already created samples.tsv during WGS:
+    ssh -l <user> cluster.s3it.uzh.ch
 
-```bash
+After login, you are on the cluster login node.
+
+Now move into your repo:
+
     cd ~/wgs_pipeline
-    bash 02_breseq/cluster/bin/make_breseq_samples.sh samples.tsv data/breseq/breseq_samples.txt
-```
 
-Check the file:
+If the repo is not there:
 
-```bash
+    cd ~
+    git clone https://github.com/meghnasw/WGS_pipeline.git wgs_pipeline
+    cd wgs_pipeline
+
+
+------------------------------------------------------------
+1) One-time: cluster setup (if not done already)
+------------------------------------------------------------
+
+If you already ran setup for 01_wgs, skip this.
+
+Otherwise:
+
+    PIPELINE_ROOT="$HOME/wgs_pipeline" SCRATCH_ROOT="/scratch/$USER/wgs_pipeline" bash 01_wgs/cluster/bin/setup_cluster.sh
+
+This creates:
+- ~/wgs_pipeline/env/wgs
+- data -> /scratch/$USER/wgs_pipeline/data
+- results -> /scratch/$USER/wgs_pipeline/results
+
+
+------------------------------------------------------------
+2) Upload FASTQ files AND reference file
+------------------------------------------------------------
+
+IMPORTANT:
+You must upload:
+- Paired FASTQ files
+- Reference genome in GenBank format (.gbk)
+
+All files must go to:
+
+    /scratch/$USER/wgs_pipeline/data/breseq/
+
+Recommended structure:
+
+    data/breseq/
+        ├── fastq/
+        └── ref/
+
+From your laptop (NOT on cluster):
+
+Example:
+
+    rsync -avz --progress \
+      <PATH_TO_FASTQ_FILES>/ \
+      <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/breseq/fastq/
+
+Upload reference:
+
+    rsync -avz --progress \
+      <PATH_TO_REFERENCE>/reference.gbk \
+      <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/breseq/ref/
+
+
+Verify on cluster:
+
+    ls -lh /scratch/$USER/wgs_pipeline/data/breseq/fastq
+    ls -lh /scratch/$USER/wgs_pipeline/data/breseq/ref
+
+
+------------------------------------------------------------
+3) Create breseq sample list
+------------------------------------------------------------
+
+On cluster:
+
+    cd ~/wgs_pipeline
+
+Generate sample prefixes automatically:
+
+    ls /scratch/$USER/wgs_pipeline/data/breseq/fastq/*_1*.fastq.gz \
+      | sed 's/_1.*.fastq.gz//' \
+      | sort > data/breseq/breseq_samples.txt
+
+Check:
+
     wc -l data/breseq/breseq_samples.txt
     head data/breseq/breseq_samples.txt
-```
 
-Each prefix must correspond to:
-
-<prefix>_1.fastq.gz
-<prefix>_2.fastq.gz
 
 ------------------------------------------------------------
-3) Submit breseq (Slurm array job)
+4) Submit breseq array job
 ------------------------------------------------------------
 
-IMPORTANT:
+From repo root on cluster:
 
-- Each sample runs as one array task.
-- You DO NOT edit the slurm script.
-- You set resources in the submit command.
-- You MUST provide the reference file.
-
-Suggested resources (bacterial WGS):
-
-1–20 samples:
-    --cpus 4
-    --mem 16G
-    --time 04:00:00
-
-21–50 samples:
-    --cpus 4
-    --mem 16G
-    --time 08:00:00
-
-51–100 samples:
-    --cpus 4
-    --mem 16G
-    --time 16:00:00
-
-Submit example:
-
-```bash
     cd ~/wgs_pipeline
 
-    bash 02_breseq/cluster/bin/submit_breseq.sh \
-        --ref data/breseq/ref/my_reference.gbk \
-        --partition standard \
-        --time 08:00:00 \
-        --cpus 4 \
-        --mem 16G
-```
+Submit:
+
+    sbatch --array=1-$(wc -l < data/breseq/breseq_samples.txt) \
+      02_breseq/cluster/breseq_array.sbatch
+
+This runs one sample per array task.
 
 ------------------------------------------------------------
-4) Monitor the job
+5) Monitor jobs
 ------------------------------------------------------------
 
 Check queue:
 
-```bash
     squeue -u $USER
-```
 
-Logs are written to:
+Check logs:
 
-```bash
-    results/breseq/logs/
-```
+    ls results/breseq-*.out
+    tail -f results/breseq-<jobid>_<taskid>.out
 
-Follow a job:
+After completion:
 
-```bash
-    tail -f results/breseq/logs/breseq-<jobid>_<arrayid>.out
-```
+    sacct -j <jobid> --format=JobID,State,Elapsed,MaxRSS
 
-Check resource usage after completion:
-
-```bash
-    sacct -j <jobid> --format=JobID,State,Elapsed,MaxRSS,ReqMem,AllocCPUS
-```
 
 ------------------------------------------------------------
-5) Create gd_list.txt (after all samples finish)
+6) Generate gd_list.txt (after all jobs finish)
 ------------------------------------------------------------
 
-After the array job finishes:
+On cluster:
 
-```bash
-    cd ~/wgs_pipeline
-    bash 02_breseq/cluster/bin/make_gd_list.sh results/breseq
-```
+    OUT=/scratch/$USER/wgs_pipeline/results/breseq
+
+    find "$OUT" -type f -path "*/output/output.gd" | sort > "$OUT/gd_list.txt"
 
 Check:
 
-```bash
-    wc -l results/breseq/gd_list.txt
-```
-
-This file lists all output.gd files.
+    wc -l "$OUT/gd_list.txt"
 
 
 ------------------------------------------------------------
-6) Run COMPARE + ANNOTATE
+7) Run mutation comparison
 ------------------------------------------------------------
 
-IMPORTANT:
-Use the SAME reference file as in step 3.
+Submit comparison job:
 
-Submit:
-
-```bash
-    cd ~/wgs_pipeline
-
-    BRESEQ_REF=data/breseq/ref/my_reference.gbk \
-    sbatch 02_breseq/cluster/slurm/run_breseq_compare.slurm
-```
+    sbatch 02_breseq/cluster/breseq_compare.sbatch
 
 This generates:
-
-    results/breseq/breseq_compare.tsv
-    results/breseq/annotated_tsv/<sample>.tsv
-
-
-------------------------------------------------------------
-7) Outputs
-------------------------------------------------------------
-
-Per sample:
-
-    results/breseq/<sample>/
-
-Important files:
-
-    output/output.gd
-    output/index.html
-
-Combined outputs:
 
     results/breseq/breseq_compare.tsv
     results/breseq/annotated_tsv/
@@ -253,27 +179,16 @@ Combined outputs:
 8) Copy results back to your local machine
 ------------------------------------------------------------
 
-Run from your laptop:
+From your laptop:
 
-```bash
     rsync -avz --progress \
-        <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/results/breseq/ \
-        <DESTINATION_FOLDER>/breseq_results/
-```
+      <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/results/breseq/ \
+      <DESTINATION_FOLDER>/breseq_results/
+
 
 ------------------------------------------------------------
-9) Cleanup (ONLY if you are sure)
+9) Cleanup (only if you are sure)
 ------------------------------------------------------------
 
-```bash
-    rm -rf /scratch/$USER/wgs_pipeline/results/breseq/*
     rm -rf /scratch/$USER/wgs_pipeline/data/breseq/*
-```
-
-------------------------------------------------------------
-10) Local visualization
-------------------------------------------------------------
-
-Follow:
-
-    02_breseq/local/README.md
+    rm -rf /scratch/$USER/wgs_pipeline/results/breseq/*
