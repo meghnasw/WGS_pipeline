@@ -8,7 +8,7 @@ CPUS="8"
 MEM="24G"
 
 # BUSCO defaults
-BUSCO_LINEAGE=""  # e.g. bacteria_odb10 (required if you want BUSCO)
+BUSCO_LINEAGE=""          # e.g. bacteria_odb10 (required if you want BUSCO)
 BUSCO_DOWNLOADS="/scratch/$USER/busco_downloads"
 
 usage() {
@@ -34,21 +34,22 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# bin/ is: 01_wgs/cluster/bin  -> repo root is ../../..
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "$REPO_ROOT"
-
 mkdir -p results
 
 echo "Submitting WGS pipeline with:"
-echo "  partition: $PARTITION"
-echo "  time:      $TIME"
-echo "  cpus:      $CPUS"
-echo "  mem:       $MEM"
+echo "  repo root : $REPO_ROOT"
+echo "  partition : $PARTITION"
+echo "  time      : $TIME"
+echo "  cpus      : $CPUS"
+echo "  mem       : $MEM"
 if [ -n "$BUSCO_LINEAGE" ]; then
-  echo "  BUSCO lineage:   $BUSCO_LINEAGE"
-  echo "  BUSCO downloads: $BUSCO_DOWNLOADS"
+  echo "  BUSCO lineage   : $BUSCO_LINEAGE"
+  echo "  BUSCO downloads : $BUSCO_DOWNLOADS"
 else
-  echo "  BUSCO: disabled (no --busco-lineage provided)"
+  echo "  BUSCO : disabled (no --busco-lineage provided)"
 fi
 
 sbatch \
@@ -57,4 +58,4 @@ sbatch \
   --cpus-per-task="$CPUS" \
   --mem="$MEM" \
   --export=ALL,LINEAGE="$BUSCO_LINEAGE",BUSCO_DOWNLOADS="$BUSCO_DOWNLOADS" \
-  cluster/slurm/run_wgs.slurm
+  01_wgs/cluster/slurm/run_wgs.slurm
