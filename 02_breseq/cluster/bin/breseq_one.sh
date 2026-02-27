@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+command -v breseq >/dev/null 2>&1 || { echo "ERROR: breseq not found in env. Activate env/wgs and run: conda install -y breseq" >&2; exit 1; }
 # Defaults (can be overridden when submitting)
 BRESEQ_SAMPLES="${BRESEQ_SAMPLES:-data/breseq/breseq_samples.txt}"
 OUT_ROOT="${OUT_ROOT:-results/breseq}"
@@ -20,6 +21,9 @@ prefix="$(sed -n "${SLURM_ARRAY_TASK_ID}p" "$BRESEQ_SAMPLES")"
 sample="$(basename "$prefix")"
 outdir="$OUT_ROOT/$sample"
 mkdir -p "$outdir"
+
+command -v breseq >/dev/null 2>&1 || { echo "ERROR: breseq not found in env. Activate env/wgs and run: conda install -y breseq" >&2; exit 1; }
+
 
 # FASTQ naming expected by this pipeline:
 r1="${prefix}_1_trimmed.fastq.gz"
