@@ -106,42 +106,68 @@ ls <PATH_TO_RESULTS>/combined_metrics.csv
 ```
 
 ------------------------------------------------------------
-4) Launch the Shiny dashboard
+3) One-time: initialize the dashboard R environment (renv)
 ------------------------------------------------------------
 
-Run: 
+You only do this ONCE per machine.
 
-```bash
-Rscript 01_wgs/local/dashboard/app.R </PATH/TO/RESULTS>
-```
+From repo root:
 
-Your browser should open automatically.
+    cd <PATH_TO_YOUR_wgs_pipeline_REPO>
 
-If not, copy the URL printed in the console and paste it into your browser.
+Run:
 
+    cd 01_wgs/local/dashboard
+    R -q -e 'install.packages("renv", repos="https://cloud.r-project.org"); renv::init(bare=TRUE)'
+    R -q -e 'renv::restore(prompt=FALSE)'
+    cd ../../..
 
-------------------------------------------------------------
-5) What the dashboard shows
-------------------------------------------------------------
-
-The Shiny app allows you to:
-
-- View assembly statistics
-- Compare N50, contig count, genome size
-- Inspect BUSCO completeness (if available)
-- Download summary tables
+Notes:
+- The repo contains renv.lock (pinned package versions).
+- renv installs packages into a project-local library.
 
 
 ------------------------------------------------------------
-6) Troubleshooting
+4) Launch the Shiny dashboard (YOU MUST PASS RESULTS PATH)
 ------------------------------------------------------------
 
-If the app says files are missing:
+From repo root:
 
-- Check that the results/ folder is present
-- Make sure you ran the cluster pipeline successfully
-- Confirm that summary_metrics.R ran without errors
+    cd <PATH_TO_YOUR_wgs_pipeline_REPO>
 
-If R cannot find a package:
+Run:
 
-install.packages("missing_package_name")
+    Rscript 01_wgs/local/dashboard/app.R <LOCAL_RESULTS_ROOT>/results
+
+Example:
+
+    Rscript 01_wgs/local/dashboard/app.R ~/wgs_results/results
+
+If you forget the argument, you can also do:
+
+    RESULTS_ROOT=<LOCAL_RESULTS_ROOT>/results Rscript 01_wgs/local/dashboard/app.R
+
+
+------------------------------------------------------------
+5) Troubleshooting
+------------------------------------------------------------
+
+Error:
+  combined_metrics.csv not found
+
+Fix:
+- Run summarize_metrics.R first (step 2)
+- Make sure you passed the correct results folder
+
+Check:
+
+    ls <LOCAL_RESULTS_ROOT>/results/combined_metrics.csv
+
+
+If packages fail to install:
+- Make sure you have free disk space
+- Make sure you have internet access
+- Re-run:
+
+    cd 01_wgs/local/dashboard
+    R -q -e 'renv::restore(prompt=FALSE)'
