@@ -9,7 +9,7 @@ FastQC/MultiQC -> Shovill -> QUAST -> Prokka -> BUSCO (optional)
 ------------------------------------------------------------
 0) One-time: clone the repo (on cluster login node)
 ------------------------------------------------------------
-Connect to the University network direclty via WIFI or via VPN
+Connect to the University network direclty via WIFI or via VPN and log onto the cluster with the command line
 
 ```bash
 ssh -l <user> cluster.s3it.uzh.ch
@@ -79,7 +79,7 @@ rsync -avP \
   <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/
 ```
 
-Verify upload on cluster:
+Verify upload on cluster (back to the first command line window where you have logged in to the cluster):
 
 ```bash
 ls -lh /scratch/$USER/wgs_pipeline/data | head
