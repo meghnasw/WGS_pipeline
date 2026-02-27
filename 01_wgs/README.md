@@ -1,6 +1,6 @@
 # WGS Pipeline (cluster run + local R metrics)
 
-```text
+```Text
 
 There are two main parts of this pipeline:
 
