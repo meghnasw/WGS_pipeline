@@ -13,18 +13,18 @@ It uses the results folder produced by the cluster pipeline.
 
 
 ------------------------------------------------------------
-0) One-time: clone the repo locally (your laptop)
+0) One-time: get the repo locally (clone anywhere)
 ------------------------------------------------------------
 
-Open a terminal on your laptop and run:
+Option A (recommended): clone the repo into a folder of your choice:
 
-    cd ~
+    cd <WHERE_YOU_WANT_THE_REPO>
     git clone https://github.com/meghnasw/WGS_pipeline.git wgs_pipeline
     cd wgs_pipeline
 
-If you already cloned it earlier, update it:
+Option B: if you already cloned it earlier, update it:
 
-    cd ~/wgs_pipeline
+    cd <PATH_TO_YOUR_EXISTING_wgs_pipeline_REPO>
     git pull
 
 
