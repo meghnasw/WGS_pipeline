@@ -62,13 +62,13 @@ EXCLUDED (never processed):
 
 Please note: 
 
-```text
+
 - Your lab’s sequencing data location usually appears as: /Volumes/
 - rsync only paired reads to scratch
 - run the rsync command from a second terminal or powershell window.
 
 Example (copy only trimmed reads; adjust path as needed):
-```
+
 
 ```bash
 rsync -avP \
