@@ -15,5 +15,5 @@ cd "$SLURM_SUBMIT_DIR"
 
 # Activate env inside this repo clone
 conda activate "$SLURM_SUBMIT_DIR/env/wgs"
-
+cd wgs_pipeline
 bash scripts/WGS_pipelinev2.sh
