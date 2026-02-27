@@ -120,19 +120,27 @@ Check:
 
 
 ------------------------------------------------------------
-4) Submit breseq array job
+4) Submit breseq (Slurm array)
 ------------------------------------------------------------
 
-From repo root on cluster:
+IMPORTANT:
+- You do NOT edit the slurm script.
+- You MUST provide the reference .gbk path.
+
+On cluster from repo root:
 
     cd ~/wgs_pipeline
 
+Set your reference path (example):
+
+    REF_GBK=/scratch/$USER/wgs_pipeline/data/breseq/ref/<YOUR_REFERENCE>.gbk
+
 Submit:
 
-    sbatch --array=1-$(wc -l < data/breseq/breseq_samples.txt) \
+    sbatch \
+      --export=ALL,REF_GBK="$REF_GBK",BRESEQ_SAMPLES="data/breseq/breseq_samples.txt",OUT_ROOT="results/breseq" \
+      --array=1-$(wc -l < data/breseq/breseq_samples.txt) \
       02_breseq/cluster/slurm/run_breseq_array.slurm
-
-This runs one sample per array task.
 
 ------------------------------------------------------------
 5) Monitor jobs
