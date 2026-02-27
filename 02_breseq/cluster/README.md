@@ -119,28 +119,36 @@ Check:
     head data/breseq/breseq_samples.txt
 
 
-------------------------------------------------------------
+-------------------------------------------------------------
 4) Submit breseq (Slurm array)
 ------------------------------------------------------------
 
 IMPORTANT:
 - You do NOT edit the slurm script.
 - You MUST provide the reference .gbk path.
+- You MUST have already created:
+      data/breseq/breseq_samples.txt
 
-On cluster from repo root:
+From cluster login node:
 
     cd ~/wgs_pipeline
 
 Set your reference path (example):
 
-    REF_GBK=/scratch/$USER/wgs_pipeline/data/breseq/ref/<YOUR_REFERENCE>.gbk
+    REF_GBK=/scratch/$USER/wgs_pipeline/data/breseq/ref/REL606.gbk
 
-Submit:
+Submit the array job:
 
     sbatch \
       --export=ALL,REF_GBK="$REF_GBK",BRESEQ_SAMPLES="data/breseq/breseq_samples.txt",OUT_ROOT="results/breseq" \
       --array=1-$(wc -l < data/breseq/breseq_samples.txt) \
       02_breseq/cluster/slurm/run_breseq_array.slurm
+
+You will see:
+
+    Submitted batch job <JOBID>
+
+Write down the JOBID.
 
 ------------------------------------------------------------
 5) Monitor jobs
@@ -150,38 +158,73 @@ Check queue:
 
     squeue -u $USER
 
-Check logs:
+Log files are stored in:
 
-    ls results/breseq-*.out
-    tail -f results/breseq-<jobid>_<taskid>.out
+    results/slurm-breseq-<JOBID>_<TASKID>.out
+    results/slurm-breseq-<JOBID>_<TASKID>.err
+
+List recent logs:
+
+    ls -1 results/slurm-breseq-*.out | tail
+    ls -1 results/slurm-breseq-*.err | tail
+
+View one log file (replace with actual filename):
+
+    tail -n 50 results/slurm-breseq-<JOBID>_<TASKID>.err
 
 After completion:
 
     sacct -j <jobid> --format=JobID,State,Elapsed,MaxRSS
 
+------------------------------------------------------------
+6) Check breseq outputs
+------------------------------------------------------------
+
+Each sample produces:
+
+    results/breseq/<sample>/output/output.gd
+    results/breseq/<sample>/output/index.html
+
+Quick check:
+
+    find results/breseq -name "output.gd" | head
+    find results/breseq -name "index.html" | head
+
+If these files exist, breseq ran correctly.
 
 ------------------------------------------------------------
-6) Generate gd_list.txt (after all jobs finish)
+7) Generate gd_list.txt (after ALL samples finish)
 ------------------------------------------------------------
 
-On cluster:
+From repo root:
 
-    OUT=/scratch/$USER/wgs_pipeline/results/breseq
+    cd ~/wgs_pipeline
 
+Create the GD list:
+
+    OUT=results/breseq
     find "$OUT" -type f -path "*/output/output.gd" | sort > "$OUT/gd_list.txt"
 
 Check:
 
     wc -l "$OUT/gd_list.txt"
 
+The number should match your number of samples.
+
 
 ------------------------------------------------------------
-7) Run mutation comparison
+8) Run mutation comparison
 ------------------------------------------------------------
 
-Submit comparison job:
+Use the SAME reference file as above:
 
-    sbatch 02_breseq/cluster/breseq_compare.sbatch
+    REF_GBK=/scratch/$USER/wgs_pipeline/data/breseq/ref/<REFERENCE.gbk>
+
+Submit:
+
+    sbatch \
+      --export=ALL,REF_GBK="$REF_GBK" \
+      02_breseq/cluster/bin/breseq_compare.sh
 
 This generates:
 
@@ -190,10 +233,10 @@ This generates:
 
 
 ------------------------------------------------------------
-8) Copy results back to your local machine
+9) Copy results back to your local machine
 ------------------------------------------------------------
 
-From your laptop:
+Run from your laptop:
 
     rsync -avz --progress \
       <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/results/breseq/ \
@@ -201,7 +244,7 @@ From your laptop:
 
 
 ------------------------------------------------------------
-9) Cleanup (only if you are sure)
+10) Cleanup (ONLY if you are sure)
 ------------------------------------------------------------
 
     rm -rf /scratch/$USER/wgs_pipeline/data/breseq/*
