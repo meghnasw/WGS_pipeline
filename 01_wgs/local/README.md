@@ -56,29 +56,7 @@ If you copied only selected folders, make sure you at least have:
 
 
 ------------------------------------------------------------
-2) Install R packages (one-time setup)
-------------------------------------------------------------
-
-If you get dependency errors, install missing packages as prompted.
-
-Open R or RStudio and run:
-
-```bash
-install.packages(c(
-  "shiny",
-  "tidyverse",
-  "DT",
-  "ggplot2",
-  "readr",
-  "dplyr",
-  "stringr"
-))
-
-```
-
-
-------------------------------------------------------------
-3) Run summary metrics script
+2) Run summary metrics script
 ------------------------------------------------------------
 
 From your terminal (inside the repo root):
@@ -90,7 +68,7 @@ cd wgs_pipeline
 Run:
 
 ```bash
-Rscript 01_wgs/local/metrics/summarize_metrics.R </PATH/TO/RESULTS>
+Rscript 01_wgs/local/metrics/summarize_metrics.R <PATH_TO_RESULTS>
 ```
 
 This script:
@@ -106,29 +84,7 @@ ls <PATH_TO_RESULTS>/combined_metrics.csv
 ```
 
 ------------------------------------------------------------
-3) One-time: initialize the dashboard R environment (renv)
-------------------------------------------------------------
-
-You only do this ONCE per machine.
-
-From repo root:
-
-    cd <PATH_TO_YOUR_wgs_pipeline_REPO>
-
-Run:
-
-    cd 01_wgs/local/dashboard
-    R -q -e 'install.packages("renv", repos="https://cloud.r-project.org"); renv::init(bare=TRUE)'
-    R -q -e 'renv::restore(prompt=FALSE)'
-    cd ../../..
-
-Notes:
-- The repo contains renv.lock (pinned package versions).
-- renv installs packages into a project-local library.
-
-
-------------------------------------------------------------
-4) Launch the Shiny dashboard (YOU MUST PASS RESULTS PATH)
+3) Launch the Shiny dashboard (YOU MUST PASS RESULTS PATH)
 ------------------------------------------------------------
 
 From repo root:
@@ -137,7 +93,7 @@ From repo root:
 
 Run:
 
-    Rscript 01_wgs/local/dashboard/app.R <LOCAL_RESULTS_ROOT>/results
+    Rscript 01_wgs/local/dashboard/app.R <PATH_TO_RESULTS>/results
 
 Example:
 
@@ -147,6 +103,7 @@ If you forget the argument, you can also do:
 
     RESULTS_ROOT=<LOCAL_RESULTS_ROOT>/results Rscript 01_wgs/local/dashboard/app.R
 
+If the app does not render on the browser immediately, use the url displayed on the command line window.
 
 ------------------------------------------------------------
 5) Troubleshooting
@@ -161,13 +118,9 @@ Fix:
 
 Check:
 
-    ls <LOCAL_RESULTS_ROOT>/results/combined_metrics.csv
+    ls /<PATH_TO_RESULTS>/results/combined_metrics.csv
 
 
 If packages fail to install:
 - Make sure you have free disk space
 - Make sure you have internet access
-- Re-run:
-
-    cd 01_wgs/local/dashboard
-    R -q -e 'renv::restore(prompt=FALSE)'
