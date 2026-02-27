@@ -8,6 +8,12 @@ required_pkgs <- c(
   "shiny", "readr", "ggplot2", "plotly", "dplyr", "tidyr", "bslib", "colorspace"
 )
 
+missing_pkgs <- required_pkgs[!sapply(required_pkgs, requireNamespace, quietly = TRUE)]
+
+if (length(missing_pkgs) > 0) {
+  message("Installing missing R packages: ", paste(missing_pkgs, collapse = ", "))
+  install.packages(missing_pkgs, repos = "https://cloud.r-project.org")
+}
 missing_pkgs <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE)]
 if (length(missing_pkgs) > 0) {
   cat("\nERROR: Missing R packages:\n  -", paste(missing_pkgs, collapse = "\n  - "), "\n\n", sep = "")
