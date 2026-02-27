@@ -109,12 +109,39 @@ wc -l samples.tsv
 ------------------------------------------------------------
 4) Submit the pipeline (resources + BUSCO all from ONE command)
 ------------------------------------------------------------
-
 IMPORTANT:
-- Estimated time per sample: 5-10 minutes.
+- Estimated time per sample: ~10 minutes with BUSCO ON.
 - You do not edit the slurm script.
 - You set resources in the submit command.
 - BUSCO is enabled by providing --busco-lineage.
+
+#### Suggested Slurm resources (WGS pipeline)
+
+This WGS pipeline runs multiple samples **serially inside one Slurm job** (loops over samples).
+Therefore:
+- **Memory** is mostly set by the peak step (BUSCO/assembly/QC), not by sample count
+- **Time** scales ~linearly with sample count
+
+#### Recommended resources
+Choose memory based on whether BUSCO is enabled:
+
+- **BUSCO ON:** 8 CPUs, **32G** RAM (recommended)
+- **BUSCO OFF:** 8 CPUs, **24G** RAM (usually fine)
+
+Time guidance (based on a real run: 273 samples took ~38.4h on 8 CPUs):
+
+| Samples | CPUs | Mem (BUSCO OFF) | Mem (BUSCO ON) | Time |
+|---:|---:|---:|---:|---:|
+| 1–20 | 8 | 24G | 32G | 06:00:00 |
+| 21–50 | 8 | 24G | 32G | 12:00:00 |
+| 51–100 | 8 | 24G | 32G | 1-00:00:00 |
+| 101–200 | 8 | 24G | 32G | 2-00:00:00 |
+| 201–300 | 8 | 24G | 32G | 2-12:00:00 |
+| 300+ | 8 | 24G | 32G | 3-12:00:00 |
+
+Notes:
+- If your FASTQs are unusually large (e.g. >2 GB each), increase **time** first.
+- If you hit an out-of-memory error, increase RAM to **32G** (or 48G for extreme cases).
 
 Example with BUSCO (recommended):
 ```bash
