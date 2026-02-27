@@ -1,6 +1,4 @@
-# WGS Pipeline (cluster run + local R metrics)
-
-WGS_pipeline (module-based)
+# WGS Pipeline Modules
 
 This repo has two modules:
 

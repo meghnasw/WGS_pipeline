@@ -117,31 +117,35 @@ IMPORTANT:
 
 #### Suggested Slurm resources (WGS pipeline)
 
-This WGS pipeline runs multiple samples **serially inside one Slurm job** (loops over samples).
+This WGS pipeline loops over many samples **inside one Slurm job**.
+- **Memory** is set by the “peak” step (often BUSCO / assembly QC), so it does **not** scale strongly with number of samples.
+- **Time** scales roughly with number of samples.
+
+#### Memory (important)
+From real runs, peak RAM for the full pipeline is ~25 GB.
 Therefore:
-- **Memory** is mostly set by the peak step (BUSCO/assembly/QC), not by sample count
-- **Time** scales ~linearly with sample count
+- **BUSCO ON:** request **32G** (recommended)
+- **BUSCO OFF:** request **32G** (still recommended; 24G is risky because peak ~25G has been observed)
 
-#### Recommended resources
-Choose memory based on whether BUSCO is enabled:
+#### CPUs
+- Default: **8 CPUs**
 
-- **BUSCO ON:** 8 CPUs, **32G** RAM (recommended)
-- **BUSCO OFF:** 8 CPUs, **24G** RAM (usually fine)
+#### Time 
+Anchored on a real run: **273 samples took ~38.4h** (~8.4 min/sample).  
+Use these conservative time requests:
 
-Time guidance (based on a real run: 273 samples took ~38.4h on 8 CPUs):
-
-| Samples | CPUs | Mem (BUSCO OFF) | Mem (BUSCO ON) | Time |
-|---:|---:|---:|---:|---:|
-| 1–20 | 8 | 24G | 32G | 06:00:00 |
-| 21–50 | 8 | 24G | 32G | 12:00:00 |
-| 51–100 | 8 | 24G | 32G | 1-00:00:00 |
-| 101–200 | 8 | 24G | 32G | 2-00:00:00 |
-| 201–300 | 8 | 24G | 32G | 2-12:00:00 |
-| 300+ | 8 | 24G | 32G | 3-12:00:00 |
+| Samples | CPUs | Mem | Time |
+|---:|---:|---:|---:|
+| 1–20 | 8 | 32G | 08:00:00 |
+| 21–50 | 8 | 32G | 16:00:00 |
+| 51–100 | 8 | 32G | 1-12:00:00 |
+| 101–200 | 8 | 32G | 2-12:00:00 | s
+| 201–300 | 8 | 32G | 3-00:00:00 |
+| 300+ | 8 | 32G | 4-00:00:00 |
 
 Notes:
-- If your FASTQs are unusually large (e.g. >2 GB each), increase **time** first.
-- If you hit an out-of-memory error, increase RAM to **32G** (or 48G for extreme cases).
+- If FASTQs are unusually large (e.g. >2 GB each), increase **time** first.
+- If you ever see an out-of-memory error, increase RAM to **48G**.
 
 Example with BUSCO (recommended):
 ```bash
