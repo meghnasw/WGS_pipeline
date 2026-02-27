@@ -71,21 +71,30 @@ Recommended structure:
     data/breseq/
         ├── fastq/
         └── ref/
+Create respective folders for breseq:
+
+```bash
+mkdir -p /scratch/mswaya/wgs_pipeline/data/breseq/fastq
+mkdir -p /scratch/mswaya/wgs_pipeline/data/breseq/ref
+```
 
 From your laptop (NOT on cluster):
 
-Example:
-
-    rsync -avz --progress \
-      <PATH_TO_FASTQ_FILES>/ \
-      <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/breseq/fastq/
-
+	rsync -avP \
+	  --include="*_1_trimmed.fastq.gz" \
+	  --include="*_2_trimmed.fastq.gz" \
+	  --exclude="*" \
+	  <PATH_TO_READS>/ \
+	  <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/
+	  
 Upload reference:
 
-    rsync -avz --progress \
-      <PATH_TO_REFERENCE>/reference.gbk \
-      <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/breseq/ref/
-
+   rsync -avP \
+     --include="*_1_trimmed.fastq.gz" \
+     --include="*_2_trimmed.fastq.gz" \
+     --exclude="*" \
+     <PATH_TO_REFERENCE>/reference.gbk \
+     <user>@cluster.s3it.uzh.ch:/scratch/<user>/wgs_pipeline/data/
 
 Verify on cluster:
 
