@@ -3,8 +3,9 @@
 This part of the pipeline runs locally (your laptop or desktop).
 
 Goal:
-- Summarize all WGS results
-- Generate summary metrics tables
+- Re-clone the repo locally
+- Copy results from the cluster
+- Summarize WGS results into tables
 - Launch the Shiny dashboard
 
 This does NOT require Slurm.
@@ -12,21 +13,19 @@ It uses the results folder produced by the cluster pipeline.
 
 
 ------------------------------------------------------------
-0) Assumption
+0) One-time: clone the repo locally (your laptop)
 ------------------------------------------------------------
 
-You already:
+Open a terminal on your laptop and run:
 
-1) Ran the WGS pipeline on the cluster
-2) Copied the results folder back to your local machine
+    cd ~
+    git clone https://github.com/meghnasw/WGS_pipeline.git wgs_pipeline
+    cd wgs_pipeline
 
-If not, follow:
+If you already cloned it earlier, update it:
 
-01_wgs/cluster/README.md
-
-Make sure you copied:
-
-results/
+    cd ~/wgs_pipeline
+    git pull
 
 
 ------------------------------------------------------------
